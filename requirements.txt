@@ -4,6 +4,4 @@ pandas_datareader
 matplotlib
 seaborn
 scikit-learn
-keras
-tensorflow
-sqlite_object
+PyDrive
