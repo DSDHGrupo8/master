@@ -1,0 +1,9 @@
+numpy<=1.14.5,>1.13.3
+pandas
+pandas_datareader
+matplotlib
+seaborn
+scikit-learn
+keras
+tensorflow
+sqlite_object
