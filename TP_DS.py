@@ -69,7 +69,7 @@ class tp1_DS:
       #prepare dataset  
       #....   
       #spilt dataset
-	  self.df=pd.read_csv("Properati_CABA_DS.csv",encoding = 'utf8')
+      self.df=pd.read_csv("Properati_CABA_DS.csv",encoding = 'utf8')
       campos_entrada=['state_code','place_code','property_type_code','surface_total_in_m2','precio_m2_usd']
       
       
