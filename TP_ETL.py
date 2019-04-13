@@ -11,9 +11,6 @@ from oauth2client.client import GoogleCredentials
 
 from sklearn import svm
 
-
-
-
 pd.set_option('display.expand_frame_repr', False)
 pd.options.display.float_format = '{:.2f}'.format
 
