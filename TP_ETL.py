@@ -1,4 +1,3 @@
-!pip install -U -q PyDrive
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -41,7 +40,7 @@ class tp1_ETL:
         cmap = cm.get_cmap('jet', 20)
         cax = ax1.imshow(self.df.corr(), interpolation="nearest", cmap=cmap)
         ax1.grid(True)
-        plt.title('CorrelaciÛn entre variables')
+        plt.title('Correlaci√≥n entre variables')
         labels=self.df.columns
         ax1.set_xticklabels(labels,fontsize=12)
         ax1.set_yticklabels(labels,fontsize=12)
@@ -142,7 +141,7 @@ class tp1_ETL:
         
         
         #DROPEAMOS VARIABLES NO INTERESANTES
-        #dropeo columnas que no son de interÈs
+        #dropeo columnas que no son de inter√©s
         cols=['country_name', 'currency','price', 'price_aprox_local_currency','operation','lat','lon','properati_url','description','title','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id','price_usd_per_m2']
         self.df.drop(cols, axis=1, inplace=True)
         self.df.dropna(subset=['surface_total_in_m2','price_aprox_usd'],inplace=True)
@@ -151,7 +150,7 @@ class tp1_ETL:
         #print(self.df.columns)
         
         #ARREGLAR DATOS CORREGIBLES
-        #Arreglar precio x m2 en dÛlares
+        #Arreglar precio x m2 en d√≥lares
         self.df['price_aprox_usd']=np.round(self.df['price_aprox_usd'],0).fillna(0).astype(np.int64)
         self.df['surface_total_in_m2']=np.round(self.df['surface_total_in_m2'],0).fillna(0).astype(np.int64)
         self.df['precio_m2_usd']=np.round(self.df['price_aprox_usd'] / self.df['surface_total_in_m2'],0)
@@ -176,7 +175,7 @@ class tp1_ETL:
         self.df=self.df.query(qryFiltro)
         
         #Falta que grabe al Google Drive de nuevo - esta parte no funca 
-        # pero el dataframe est· limpio y filtrado
+        # pero el dataframe est√° limpio y filtrado
         self.df.to_csv("Properati_fixed.csv",encoding='utf-8')
         uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})
         uploaded.SetContentFile("Properati_fixed.csv")
