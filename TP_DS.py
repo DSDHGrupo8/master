@@ -1,5 +1,3 @@
-!pip install -U -q PyDrive
-!pip install --upgrade scikit-learn
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -59,7 +57,7 @@ class tp1_DS:
       
     endTime=datetime.utcnow()
     
-    print("Tiempo de ejecución:" , (endTime-startTime).total_seconds(), " segundos")
+    print("Tiempo de ejecuciÃ³n:" , (endTime-startTime).total_seconds(), " segundos")
     
     #print(self.df["state_code"])
     print("All done!")
