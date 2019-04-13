@@ -23,12 +23,6 @@ import math
 class tp1_DS:
     
     
-  def maprow(self,row):
-      row.state_code=self.dfStates[self.dfStates.name==row.state_name].ID
-      row.place_code=self.dfPlaces[self.dfPlaces.name==row.place_name].ID
-      row.property_type_code=self.dfPropertyTypes[self.dfPropertyTypes.name==row.property_type].ID
-    
-      
   def __init__(self):
     print("Version de SciKit:" ,sk.__version__)
     # Authenticate and create the PyDrive client.
@@ -41,49 +35,13 @@ class tp1_DS:
 #    fluff, id = link.split('=')
 #    downloaded = drive.CreateFile({'id':id}) 
 #    downloaded.GetContentFile('Properati_limpio.csv')  
-    self.df=pd.read_csv("Properati_limpio.csv",encoding = 'utf8')
     
-    #Convertir campos categoricos a valores enteros
-    self.dfStates=pd.DataFrame(self.df["state_name"].unique(),columns=['name'])
-    self.dfStates["ID"]=list(range(len(self.dfStates)))
-    self.dfPlaces=pd.DataFrame(self.df["place_name"].unique(),columns=['name'])
-    self.dfPlaces["ID"]=list(range(len(self.dfPlaces)))
-    self.dfPropertyTypes=pd.DataFrame(self.df["property_type"].unique(),columns=['name'])
-    self.dfPropertyTypes["ID"]=list(range(len(self.dfPropertyTypes)))
     
     #print(dfStates.head(5))
     #print(dfPlaces.head(5))
     #print(dfPropertyTypes.head(5))
     
-    startTime=datetime.utcnow()
-    
-    print("Cant. registros del dataset:", len(self.df))
-    
-    for index, row in self.df.iterrows():
-      if (math.fmod(index,1000)==0):print("Processing row:", index)
-      #print("processing row:" , index)
-      row.state_code=self.dfStates[self.dfStates.name==row.state_name].ID
-      #print("row.state_code:",row.state_code)
-      row.place_code=self.dfPlaces[self.dfPlaces.name==row.place_name].ID
-      #print("row.place_code:",row.place_code)
-      row.property_type_code=self.dfPropertyTypes[self.dfPropertyTypes.name==row.property_type].ID
-      #print("row.property_type_code:",row.property_type_code)
-    
-    
-    
-    print(self.df.info())
-    
-    #self.df.apply(lambda row: self.maprow(row), axis=1)
-      
-    endTime=datetime.utcnow()
-    print(self.df.head(5))
-    self.df.to_csv("Properati_limpio2.csv",encoding = 'utf8')
-    
-    print("Tiempo de ejecución:" , (endTime-startTime).total_seconds(), " segundos")
-    
-    #print(self.df["state_code"])
-    print("All done!")
-    
+    print("Dataset cargado . Cantidad de registros del dataset:", len(self.df))
   def analizarRegistrosRotos(self):
     
     self.df=self.df.fillna(0)
@@ -111,10 +69,11 @@ class tp1_DS:
       #prepare dataset  
       #....   
       #spilt dataset
+	  self.df=pd.read_csv("Properati_CABA_DS.csv",encoding = 'utf8')
       campos_entrada=['state_code','place_code','property_type_code','surface_total_in_m2','precio_m2_usd']
       
-      df2=pd.read_csv("properati_limpio2.csv")
-      Xtrn, Xtest, Ytrn, Ytest = train_test_split(df2[campos_entrada], df2['price_aprox_usd'],
+      
+      Xtrn, Xtest, Ytrn, Ytest = train_test_split(self.df[campos_entrada], self.df['price_aprox_usd'],
                                                   test_size=0.2)
       
       models = [LinearRegression(),
@@ -146,4 +105,4 @@ class tp1_DS:
 
 x=tp1_DS()
 #x.analizarRegistrosRotos()
-#x.predecir()
+x.predecir()
