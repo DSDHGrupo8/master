@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 from statistics import mode 
 from matplotlib import cm as cm
 
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
-from google.colab import auth
-from oauth2client.client import GoogleCredentials
+#from pydrive.auth import GoogleAuth
+#from pydrive.drive import GoogleDrive
+#from google.colab import auth
+#from oauth2client.client import GoogleCredentials
 
 import sklearn as sk
 from sklearn.neighbors import KNeighborsRegressor
@@ -16,31 +16,40 @@ from sklearn.svm import SVR
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
-from sklearn import svm
+#from sklearn import svm
 from datetime import datetime
+import math
 
 class tp1_DS:
+    
+    
+  def maprow(self,row):
+      row.state_code=self.dfStates[self.dfStates.name==row.state_name].ID
+      row.place_code=self.dfPlaces[self.dfPlaces.name==row.place_name].ID
+      row.property_type_code=self.dfPropertyTypes[self.dfPropertyTypes.name==row.property_type].ID
+    
+      
   def __init__(self):
     print("Version de SciKit:" ,sk.__version__)
     # Authenticate and create the PyDrive client.
-    auth.authenticate_user()
-    gauth = GoogleAuth()
-    gauth.credentials = GoogleCredentials.get_application_default()
-    drive = GoogleDrive(gauth)
-    link = 'https://drive.google.com/open?id=10yw7Aopax6xH572LiDe_pa-oHaBNOuag' # The shareable link
-    #link = 'https://drive.google.com/open?id=1GXhb9LJJshv_gFdiMS6PujIG8SlhaZqv' # The shareable link
-    fluff, id = link.split('=')
-    downloaded = drive.CreateFile({'id':id}) 
-    downloaded.GetContentFile('Properati_limpio.csv')  
+#    auth.authenticate_user()
+#    gauth = GoogleAuth()
+#    gauth.credentials = GoogleCredentials.get_application_default()
+#    drive = GoogleDrive(gauth)
+#    link = 'https://drive.google.com/open?id=10yw7Aopax6xH572LiDe_pa-oHaBNOuag' # The shareable link
+#    #link = 'https://drive.google.com/open?id=1GXhb9LJJshv_gFdiMS6PujIG8SlhaZqv' # The shareable link
+#    fluff, id = link.split('=')
+#    downloaded = drive.CreateFile({'id':id}) 
+#    downloaded.GetContentFile('Properati_limpio.csv')  
     self.df=pd.read_csv("Properati_limpio.csv",encoding = 'utf8')
     
     #Convertir campos categoricos a valores enteros
-    dfStates=pd.DataFrame(self.df["state_name"].unique(),columns=['name'])
-    dfStates["ID"]=list(range(len(dfStates)))
-    dfPlaces=pd.DataFrame(self.df["place_name"].unique(),columns=['name'])
-    dfPlaces["ID"]=list(range(len(dfPlaces)))
-    dfPropertyTypes=pd.DataFrame(self.df["property_type"].unique(),columns=['name'])
-    dfPropertyTypes["ID"]=list(range(len(dfPropertyTypes)))
+    self.dfStates=pd.DataFrame(self.df["state_name"].unique(),columns=['name'])
+    self.dfStates["ID"]=list(range(len(self.dfStates)))
+    self.dfPlaces=pd.DataFrame(self.df["place_name"].unique(),columns=['name'])
+    self.dfPlaces["ID"]=list(range(len(self.dfPlaces)))
+    self.dfPropertyTypes=pd.DataFrame(self.df["property_type"].unique(),columns=['name'])
+    self.dfPropertyTypes["ID"]=list(range(len(self.dfPropertyTypes)))
     
     #print(dfStates.head(5))
     #print(dfPlaces.head(5))
@@ -51,11 +60,24 @@ class tp1_DS:
     print("Cant. registros del dataset:", len(self.df))
     
     for index, row in self.df.iterrows():
-      row.state_code=dfStates[dfStates.name==row.state_name].ID
-      row.place_code=dfPlaces[dfPlaces.name==row.place_name].ID
-      row.property_type_code=dfPropertyTypes[dfPropertyTypes.name==row.property_type].ID
+      if (math.fmod(index,1000)==0):print("Processing row:", index)
+      #print("processing row:" , index)
+      row.state_code=self.dfStates[self.dfStates.name==row.state_name].ID
+      #print("row.state_code:",row.state_code)
+      row.place_code=self.dfPlaces[self.dfPlaces.name==row.place_name].ID
+      #print("row.place_code:",row.place_code)
+      row.property_type_code=self.dfPropertyTypes[self.dfPropertyTypes.name==row.property_type].ID
+      #print("row.property_type_code:",row.property_type_code)
+    
+    
+    
+    print(self.df.info())
+    
+    #self.df.apply(lambda row: self.maprow(row), axis=1)
       
     endTime=datetime.utcnow()
+    print(self.df.head(5))
+    self.df.to_csv("Properati_limpio2.csv",encoding = 'utf8')
     
     print("Tiempo de ejecución:" , (endTime-startTime).total_seconds(), " segundos")
     
@@ -90,10 +112,9 @@ class tp1_DS:
       #....   
       #spilt dataset
       campos_entrada=['state_code','place_code','property_type_code','surface_total_in_m2','precio_m2_usd']
-      print("State Name Codes:" ,self.df.state_name.codes())
       
-      
-      Xtrn, Xtest, Ytrn, Ytest = train_test_split(self.df[campos_entrada], self.df['price_aprox_usd'],
+      df2=pd.read_csv("properati_limpio2.csv")
+      Xtrn, Xtest, Ytrn, Ytest = train_test_split(df2[campos_entrada], df2['price_aprox_usd'],
                                                   test_size=0.2)
       
       models = [LinearRegression(),
@@ -125,4 +146,4 @@ class tp1_DS:
 
 x=tp1_DS()
 #x.analizarRegistrosRotos()
-x.predecir()
+#x.predecir()
