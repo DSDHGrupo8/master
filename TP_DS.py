@@ -17,8 +17,7 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 #from sklearn import svm
-from datetime import datetime
-import math
+
 
 class tp1_DS:
     
@@ -66,39 +65,34 @@ class tp1_DS:
     print("Registros rotos tipo 6 (superficie total):" ,np.round(len(dfNulos6)/len(self.df)*100,2), "%")
     
   def predecir(self):
-      #prepare dataset  
-      #....   
-      #spilt dataset
-	  self.df=pd.read_csv("Properati_CABA_DS.csv",encoding = 'utf8')
-      campos_entrada=['state_code','place_code','property_type_code','surface_total_in_m2','precio_m2_usd']
-      
-      
-      Xtrn, Xtest, Ytrn, Ytest = train_test_split(self.df[campos_entrada], self.df['price_aprox_usd'],
-                                                  test_size=0.2)
-      
-      models = [LinearRegression(),
-                RandomForestRegressor(n_estimators=100, max_features='sqrt'),
-                KNeighborsRegressor(n_neighbors=6),
-                SVR(kernel='linear'),
-                LogisticRegression()
-                ]
 
-      TestModels = pd.DataFrame()
-      tmp = {}
+    self.df=pd.read_csv("Properati_CABA_DS.csv",encoding = 'utf8')
+    campos_entrada=['state_code','place_code','property_type_code','surface_total_in_m2','precio_m2_usd']
+    Xtrn, Xtest, Ytrn, Ytest = train_test_split(self.df[campos_entrada], self.df['price_aprox_usd'],
+                      test_size=0.2)
+    models = [LinearRegression(),
+    RandomForestRegressor(n_estimators=100, max_features='sqrt'),
+    KNeighborsRegressor(n_neighbors=6),
+    SVR(kernel='linear'),
+    LogisticRegression()
+    ]
+
+    TestModels = pd.DataFrame()
+    tmp = {}
  
-      for model in models:
-          # get model name
-          m = str(model)
-          tmp['Model'] = m[:m.index('(')]
-          # fit model on training dataset
-          model.fit(Xtrn, Ytrn['price_aprox_usd'])
-          # predict prices for test dataset and calculate r^2
-          tmp['R2_Price'] = r2_score(Ytest['price_aprox_usd'], model.predict(Xtest))
-          # write obtained data
-          TestModels = TestModels.append([tmp])
-
+    for model in models:
+      # get model name
+      m = str(model)
+      tmp['Model'] = m[:m.index('(')]
+      # fit model on training dataset
+      model.fit(Xtrn, Ytrn['price_aprox_usd'])
+      # predict prices for test dataset and calculate r^2
+      tmp['R2_Price'] = r2_score(Ytest['price_aprox_usd'], model.predict(Xtest))
+      # write obtained data
+      TestModels = TestModels.append([tmp])
+    
       TestModels.set_index('Model', inplace=True)
-
+    
       fig, axes = plt.subplots(ncols=1, figsize=(10, 4))
       TestModels.R2_Price.plot(ax=axes, kind='bar', title='R2_Price')
       plt.show()
