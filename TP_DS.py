@@ -24,6 +24,7 @@ class tp1_DS:
     
   def __init__(self):
     print("Version de SciKit:" ,sk.__version__)
+	self.df=pd.read_csv("Properati_CABA_DS.csv",encoding = 'utf8')
     # Authenticate and create the PyDrive client.
 #    auth.authenticate_user()
 #    gauth = GoogleAuth()
@@ -66,7 +67,7 @@ class tp1_DS:
     
   def predecir(self):
 
-    self.df=pd.read_csv("Properati_CABA_DS.csv",encoding = 'utf8')
+    
     campos_entrada=['state_code','place_code','property_type_code','surface_total_in_m2','precio_m2_usd']
     Xtrn, Xtest, Ytrn, Ytest = train_test_split(self.df[campos_entrada], self.df['price_aprox_usd'],
                       test_size=0.2)
