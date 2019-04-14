@@ -24,7 +24,7 @@ class tp1_DS:
     
   def __init__(self):
     print("Version de SciKit:" ,sk.__version__)
-	self.df=pd.read_csv("Properati_CABA_DS.csv",encoding = 'utf8')
+    self.df=pd.read_csv("Properati_CABA_DS.csv",encoding = 'utf8')
     # Authenticate and create the PyDrive client.
 #    auth.authenticate_user()
 #    gauth = GoogleAuth()
