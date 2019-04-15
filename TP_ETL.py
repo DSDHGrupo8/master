@@ -17,64 +17,6 @@ pd.options.display.float_format = '{:.2f}'.format
 
 class tp1_ETL:
   
-     
-  
-    def conteo_por_grupos(self):
-        totalregs=len(self.df)
-        self.df['COUNTER'] =1       #initially, set that counter to 1.
-        #g=self.df.groupby(['state_name','place_name'])['COUNTER'].size();
-        g=self.df.groupby(['state_name','place_name'])['COUNTER'].size()/totalregs * 100;
-        g=g.sort_values(ascending=False)
-        print(g)
-  
-    def correlation_matrix(self):
-        
-            
-        #plt.rcParams.update({'font.size': 12})
-        fig = plt.figure()
-        fig.set_figheight(10)
-        fig.set_figwidth(40)
-        ax1 = fig.add_subplot(111)
-        cmap = cm.get_cmap('jet', 20)
-        cax = ax1.imshow(self.df.corr(), interpolation="nearest", cmap=cmap)
-        ax1.grid(True)
-        plt.title('Correlación entre variables')
-        labels=self.df.columns
-        ax1.set_xticklabels(labels,fontsize=12)
-        ax1.set_yticklabels(labels,fontsize=12)
-        # Add colorbar, make sure to specify tick locations to match desired ticklabels
-        fig.colorbar(cax, ticks=[0,0.25,0.50,0.75,1])
-        plt.show()
-    
-    def mostrarHistogramas(self):
-        
-        precioSerie=self.df['price_aprox_usd']
-        
-        print("******************PRECIO**************************************")
-        print("Promedio de Precio:" + str(np.round(np.mean(precioSerie),2)))
-        print("Mediana del Precio:" + str(np.round(np.median(precioSerie),2)))
-        print("Moda:" + str(mode(precioSerie)))
-        
-        plt.hist(precioSerie,bins=50)
-        plt.xlabel("Precio en USD - propiedades")
-        plt.ylabel("Frecuencia")
-        plt.show()
-        
-        supSerie=self.df['surface_total_in_m2']
-        
-        print("******************SUPERFICIE**************************************")
-        print("Promedio de superficie:" + str(np.round(np.mean(supSerie),2)))
-        print("Mediana de superficie:" + str(np.round(np.median(supSerie),2)))
-        print("Moda:" + str(mode(supSerie)))
-        
-        
-        print("Cantidad de registros con price mayor > 0 sin nulos:" ,str(len(precioSerie)))
-        
-        plt.hist(supSerie,bins=50)
-        plt.xlabel("Superficie m2 - propiedades")
-        plt.ylabel("Frecuencia")
-        plt.show()
-
     def __init__(self):
         #Authenticate and create the PyDrive client.
         #auth.authenticate_user()
