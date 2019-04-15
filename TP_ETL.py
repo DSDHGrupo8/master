@@ -106,7 +106,7 @@ class tp1_ETL:
         
         #DROPEAMOS VARIABLES NO INTERESANTES
         #dropeo columnas que no son de interés
-        cols=['country_name', 'currency','price', 'price_aprox_local_currency','operation','lat','lon','properati_url','description','title','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id','price_usd_per_m2']
+        cols=['country_name', 'price_aprox_local_currency','operation','lat','lon','properati_url','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id']
         self.df.drop(cols, axis=1, inplace=True)
         self.df.dropna(subset=['surface_total_in_m2','price_aprox_usd'],inplace=True)
         
@@ -190,10 +190,15 @@ class tp1_ETL:
             #print("row.property_type:",row.property_type)
             
             qryfiltro="place_name=='" + row.place_name + "'"
-            qryfiltro+=" and (m2_desde<=" + str(row.surface_total_m2) 
-            qryfiltro+=" and m2_hasta>=" + str(row.surface_total_m2) + ")"
+            qryfiltro+=" and (m2_Desde<=" + str(row.surface_total_in_m2) 
+            qryfiltro+=" and m2_Hasta>=" + str(row.surface_total_in_m2) + ")"
             
-            self.df.at[index,"price_usd_per_m2"]=self.df_m2.query(qryfiltro).Valor_usd
+            auxval=self.df_m2.query(qryfiltro).Valor_usd
+            #print("auxval:" , auxval)
+            #print("len(auxval):" , len(auxval))
+            
+            if (len(auxval)>=2):
+              self.df.at[index,"price_usd_per_m2"]=auxval[1]
         
         self.df.to_csv("Properati_CABA_DS_fixed.csv",encoding='utf-8')
         #uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})
