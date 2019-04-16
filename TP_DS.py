@@ -43,30 +43,6 @@ class tp1_DS:
     
     print("Dataset cargado . Cantidad de registros del dataset:", len(self.df))
 
-   
-  def analizarRegistrosRotos(self):
-    
-    self.df=self.df.fillna(0)
-    print("Cantidad registros:",len(self.df))
-    dfNulos0=self.df[(self.df.surface_total_in_m2==0) & (self.df.price_aprox_usd==0) & (self.df.price_usd_per_m2==0)] 
-    dfNulos1=self.df[(self.df.surface_total_in_m2==0) & (self.df.price_aprox_usd==0)] 
-    dfNulos2=self.df[(self.df.price_usd_per_m2==0) & (self.df.surface_total_in_m2==0)] 
-    dfNulos3=self.df[(self.df.price_usd_per_m2==0) & (self.df.price_aprox_usd==0)]
-    
-    dfNulos4=self.df[(self.df.price_usd_per_m2==0)]
-    dfNulos5=self.df[(self.df.price_aprox_usd==0)]
-    dfNulos6=self.df[(self.df.surface_total_in_m2==0)]
-    
-    print("Registros rotos tipo 0 (irrecuperable):" ,np.round(len(dfNulos0)/len(self.df)*100,2) , "%")
-    
-    print("Registros rotos tipo 1 (sup total. m2./ precio aprox. usd.):" ,np.round(len(dfNulos1)/len(self.df)*100,2), "%")
-    print("Registros rotos tipo 2 (sup. total m2./ precio por m2):" ,np.round(len(dfNulos2)/len(self.df)*100,2), "%")
-    print("Registros rotos tipo 3 (precio por m2 / precio en usd):" ,np.round(len(dfNulos3)/len(self.df)*100,2), "%")
-
-    print("Registros rotos tipo 4 (precio por m2):" ,np.round(len(dfNulos4)/len(self.df)*100,2), "%")
-    print("Registros rotos tipo 5 (precio aprox usd):" ,np.round(len(dfNulos5)/len(self.df)*100,2), "%")
-    print("Registros rotos tipo 6 (superficie total):" ,np.round(len(dfNulos6)/len(self.df)*100,2), "%")
-    
   def predecir(self):
 
     
@@ -77,39 +53,41 @@ class tp1_DS:
     print("type of price_aprox_usd:" , type(Ytrn))
 
     models = [LinearRegression(),
-    RandomForestRegressor(n_estimators=100, max_features='sqrt'),
-    KNeighborsRegressor(n_neighbors=6),
-    SVR(kernel='linear'),
-    LogisticRegression()
+        RandomForestRegressor(n_estimators=100, max_features='sqrt'),
+        KNeighborsRegressor(n_neighbors=6),
+        SVR(kernel='linear'),
+        LogisticRegression()
     ]
 
     TestModels = pd.DataFrame()
     tmp = {}
 
-    
+    model_names=['Linear','Random_Forest','KNeighbor','SVR','Logistic']
  
     counter=0
     for model in models:
       # get model name
       m = str(model)
-      tmp['Model'] = m[:m.index('(')]
+      
+      tmp['Model'] = model_names[counter]
       # fit model on training dataset
       model.fit(Xtrn, Ytrn)
       # predict prices for test dataset and calculate r^2
       tmp['R2_Price'] = r2_score(Ytest, model.predict(Xtest))
       # write obtained data
       TestModels = TestModels.append([tmp])
-      counter+=1
-      print("len(TestModels):", len(TestModels))
+      #print("len(TestModels):", len(TestModels))
 
       TestModels.set_index('Model', inplace=True)
+      print("TestModels:",TestModels)
     
-      fig, axes = plt.subplots(ncols=1, figsize=(10, 4))
+      fig, axes = plt.subplots(ncols=1, figsize=(5, 5))
+      #print("axes:",axes)
       TestModels.R2_Price.plot(ax=axes, kind='bar', title='R2_Price')
-
-      if (counter==len(TestModels)):
-        plt.show()
       
+      counter+=1
+      plt.show()  
+    
      
 
 x=tp1_DS()
