@@ -24,7 +24,7 @@ class tp1_DS:
     
   def __init__(self):
     print("Version de SciKit:" ,sk.__version__)
-    self.df=pd.read_csv("Properati_CABA_DS.csv",encoding = 'utf8')
+    self.df=pd.read_csv("Properati_CABA_DS_fixed.csv",encoding = 'utf8')
     # Authenticate and create the PyDrive client.
 #    auth.authenticate_user()
 #    gauth = GoogleAuth()
@@ -42,6 +42,8 @@ class tp1_DS:
     #print(dfPropertyTypes.head(5))
     
     print("Dataset cargado . Cantidad de registros del dataset:", len(self.df))
+
+   
   def analizarRegistrosRotos(self):
     
     self.df=self.df.fillna(0)
@@ -71,6 +73,9 @@ class tp1_DS:
     campos_entrada=['state_code','place_code','property_type_code','surface_total_in_m2','precio_m2_usd']
     Xtrn, Xtest, Ytrn, Ytest = train_test_split(self.df[campos_entrada], self.df['price_aprox_usd'],
                       test_size=0.2)
+    
+    print("type of price_aprox_usd:" , type(Ytrn))
+
     models = [LinearRegression(),
     RandomForestRegressor(n_estimators=100, max_features='sqrt'),
     KNeighborsRegressor(n_neighbors=6),
@@ -80,23 +85,32 @@ class tp1_DS:
 
     TestModels = pd.DataFrame()
     tmp = {}
+
+    
  
+    counter=0
     for model in models:
       # get model name
       m = str(model)
       tmp['Model'] = m[:m.index('(')]
       # fit model on training dataset
-      model.fit(Xtrn, Ytrn['price_aprox_usd'])
+      model.fit(Xtrn, Ytrn)
       # predict prices for test dataset and calculate r^2
-      tmp['R2_Price'] = r2_score(Ytest['price_aprox_usd'], model.predict(Xtest))
+      tmp['R2_Price'] = r2_score(Ytest, model.predict(Xtest))
       # write obtained data
       TestModels = TestModels.append([tmp])
-    
+      counter+=1
+      print("len(TestModels):", len(TestModels))
+
       TestModels.set_index('Model', inplace=True)
     
       fig, axes = plt.subplots(ncols=1, figsize=(10, 4))
       TestModels.R2_Price.plot(ax=axes, kind='bar', title='R2_Price')
-      plt.show()
+
+      if (counter==len(TestModels)):
+        plt.show()
+      
+     
 
 x=tp1_DS()
 #x.analizarRegistrosRotos()
