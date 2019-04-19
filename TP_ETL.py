@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import math
+import re
 import matplotlib.pyplot as plt
 from statistics import mode 
 from matplotlib import cm as cm
@@ -38,60 +39,96 @@ class tp1_ETL:
         self.df_m2=pd.read_csv("precioxm2_pais.csv", encoding = 'utf8')
         print("DataSet registros:", len(self.df))
         print("DataSet Lookup Precio x m2:", len(self.df_m2))
+        VALOR_DOLAR=17.8305
+        
+        #DROPEAMOS VARIABLES NO INTERESANTES
+        cols=['price', 'currency', 'country_name', 'price_aprox_local_currency','operation','lat','lon','properati_url','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id']
+        self.df.drop(cols, axis=1, inplace=True)
         
         #FIJAR SCOPE EN CABA
-        qryFiltro="(state_name=='Capital Federal') and (price_aprox_usd >= 10000 and price_aprox_usd <= 1000000)"
+        self.df = self.df[self.df['state_name'] == 'Capital Federal']
+        self.df.drop('state_name', axis=1, inplace=True)
+           
+        #CORRECCION DE M2 TOTALES
+        df1 = self.df[self.df['surface_total_in_m2'].isnull()]
+        aux = df1['title'].str.extract(r'( a )?(\.)?(x )?(\d+)\s?(m2|mt|m²)[^c](?!\w?cub)', re.IGNORECASE)
+        aux.dropna(how='all', inplace=True)
+        aux=aux[(aux[0].isnull()) & (aux[1].isnull()) & (aux[2].isnull())]
+        aux=aux.drop([0, 1, 2, 4], axis=1)
+        aux.columns=['surface_total_in_m2']
+        aux['surface_total_in_m2']=aux['surface_total_in_m2'].astype('float64')
+        self.df.loc[self.df['surface_total_in_m2'].isnull(),'surface_total_in_m2'] = aux['surface_total_in_m2']
+        
+        aux = df1['description'].str.extract(r'( a )?(\.)?(x )?(\d+)\s?(m2|mt|m²)[^c](?!\w?cub)', re.IGNORECASE)
+        aux.dropna(how='all', inplace=True)
+        aux=aux[(aux[0].isnull()) & (aux[1].isnull()) & (aux[2].isnull())]
+        aux=aux.drop([0, 1, 2, 4], axis=1)
+        aux.columns=['surface_total_in_m2']
+        aux['surface_total_in_m2']=aux['surface_total_in_m2'].astype('float64')
+        self.df.loc[self.df['surface_total_in_m2'].isnull(),'surface_total_in_m2'] = aux['surface_total_in_m2']
+        
+        #CORRECCION DE M2 CUBIERTOS
+        df1 = self.df[self.df['surface_covered_in_m2'].isnull()]
+        aux = df1['title'].str.extract(r'(\d+)\s?(m2|mt|m²)(c[^o]|\s?cub)', re.IGNORECASE)
+        aux.dropna(how='all', inplace=True)
+        aux=aux.drop([1, 2], axis=1)
+        aux.columns=['surface_covered_in_m2']
+        aux['surface_covered_in_m2']=aux['surface_covered_in_m2'].astype('float64')
+        self.df.loc[self.df['surface_covered_in_m2'].isnull(),'surface_covered_in_m2'] = aux['surface_covered_in_m2']
+        
+        aux = df1['description'].str.extract(r'(\d+)\s?(m2|mt|m²)(c[^o]|\s?cub)', re.IGNORECASE)
+        aux.dropna(how='all', inplace=True)
+        aux=aux.drop([1, 2], axis=1)
+        aux.columns=['surface_covered_in_m2']
+        aux['surface_covered_in_m2']=aux['surface_covered_in_m2'].astype('float64')
+        self.df.loc[self.df['surface_covered_in_m2'].isnull(),'surface_covered_in_m2'] = aux['surface_covered_in_m2']
+              
+        #CORRECCION DE PRECIOS
+        df1 = self.df[self.df['price_aprox_usd'].isnull()]
+        aux = df1['title'].str.extract(r'(U?u?\$[SDsd]?)\s?(\d+)\.?(\d*)\.?(\d*)')
+        aux.dropna(inplace=True)
+        aux[0]=aux[0].replace(to_replace='^\$$', value='ARS', regex=True)
+        aux[0]=aux[0].replace(to_replace='^[^A].*$', value='USD', regex=True)
+        aux['currency']=aux[0]
+        aux['price']=aux[1]+aux[2]+aux[3]
+        aux['price']=aux['price'].astype('float64')
+        aux=aux[['currency','price']]
+        aux.loc[aux['currency'] == 'ARS', 'price'] = aux.loc[:, 'price']/VALOR_DOLAR
+        self.df.loc[self.df['price_aprox_usd'].isnull(),'price_aprox_usd'] = aux.loc[:, 'price']
+        
+        aux = df1['description'].str.extract(r'(U?u?\$[SDsd]?)\s?(\d+)\.?(\d*)\.?(\d*)')
+        aux=aux.dropna()
+        aux[0]=aux[0].replace(to_replace='^\$$', value='ARS', regex=True)
+        aux[0]=aux[0].replace(to_replace='^[^A].*$', value='USD', regex=True)        
+        aux['currency']=aux[0]
+        aux['price']=aux[1]+aux[2]+aux[3]
+        aux['price']=aux['price'].astype('float64')
+        aux=aux[['currency','price']]
+        aux.loc[aux['currency'] == 'ARS', 'price'] = aux.loc[:, 'price']/VALOR_DOLAR
+        self.df.loc[self.df['price_aprox_usd'].isnull(),'price_aprox_usd'] = aux.loc[:, 'price']
+        
+        #COMPLETAR REGISTROS DESPUES DE LLENAR CON REGEX
+        self.df.dropna(subset=['surface_total_in_m2', 'surface_covered_in_m2'], how='all', inplace=True)
+        self.df.loc[(self.df['surface_total_in_m2'].isnull()) & (self.df['surface_covered_in_m2'].notnull()), 'surface_total_in_m2'] = self.df.loc[:, 'surface_covered_in_m2']
+        self.df.loc[(self.df['price_usd_per_m2'].isnull()) & (self.df['price_aprox_usd'].notnull()) & (self.df['surface_total_in_m2'].notnull()), 'price_usd_per_m2'] = self.df.loc[:, 'price_aprox_usd']/self.df.loc[:, 'surface_total_in_m2']      
+        
+        
+        #FILTRAR OUTLIERS
+        qryFiltro="(price_aprox_usd >= 10000 and price_aprox_usd <= 1000000)"
         qryFiltro+=" and (surface_total_in_m2 >= 20 and surface_total_in_m2 <= 1000)"
         qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
         
         self.df=self.df.query(qryFiltro)
         
-        #DROPEAMOS VARIABLES NO INTERESANTES
-        #dropeo columnas que no son de interés
-        cols=['country_name', 'price_aprox_local_currency','operation','lat','lon','properati_url','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id']
-        self.df.drop(cols, axis=1, inplace=True)
-        self.df.dropna(subset=['surface_total_in_m2','price_aprox_usd'],inplace=True)
-        
-            
-        #CORRECCION DE PRECIOS y MONEDA
-        df1 = self.df[self.df['price'].isnull()]
-        aux = df1['title'].str.extract(r'(U?u?\$[SDsd]?)\s?(\d+)\.?(\d*)\.?(\d*)')
-        #print("aux:", len(aux))
-        aux.dropna(inplace=True)
-        print("aux cantidad no nulos:", len(aux.dropna()))
-        #aux[0]=aux[0].str.replace('^\$$', 'ARS', regex=True)
-        aux[0]=aux[0].replace(to_replace='^\$$', value='ARS', regex=True)
-        #aux[0]=aux[0].str.replace('^[^A].*$', 'USD', regex=True)
-        aux[0]=aux[0].replace(to_replace='^[^A].*$', value='USD', regex=True)
-        aux['currency']=aux[0]
-        aux['price']=aux[1]+aux[2]+aux[3]
-        aux['price']=aux['price'].astype('float64')
-        aux=aux[['currency','price']]
-        self.df.loc[self.df['price'].isnull(),'price'] = aux['price']
-        self.df.loc[self.df['currency'].isnull(),'currency'] = aux['currency']
-        df1 = self.df[self.df['price'].isnull()]
-        aux = df1['description'].str.extract(r'(U?u?\$[SDsd]?)\s?(\d+)\.?(\d*)\.?(\d*)')
-        aux=aux.dropna()
-        #aux[0]=aux[0].str.replace('^\$$', 'ARS', regex=True)
-        aux[0]=aux[0].replace(to_replace='^\$$', value='ARS', regex=True)
-        #aux[0]=aux[0].str.replace('^[^A].*$', 'USD', regex=True)
-        aux[0]=aux[0].replace(to_replace='^[^A].*$', value='USD', regex=True)
-        aux['currency']=aux[0]
-        aux['price']=aux[1]+aux[2]+aux[3]
-        aux['price']=aux['price'].astype('float64')
-        aux=aux[['currency','price']]
-        self.df.loc[self.df['price'].isnull(),'price'] = aux['price']
-        self.df.loc[self.df['currency'].isnull(),'currency'] = aux['currency']
+        self.df.drop(['surface_covered_in_m2', 'price_per_m2'], axis=1, inplace=True)
+
         
         #ARREGLAR DATOS CORREGIBLES
         #Arreglar precio x m2 en dólares
         self.df['price_aprox_usd']=np.round(self.df['price_aprox_usd'],0).fillna(0).astype(np.int64)
-        self.df['surface_total_in_m2']=np.round(self.df['surface_total_in_m2'],0).fillna(0).astype(np.int64)
+        self.df['surface_total_in_m2']=np.round(self.df['surface_total_in_m2'],0).astype(np.int64)
         self.df['precio_m2_usd']=np.round(self.df['price_aprox_usd'] / self.df['surface_total_in_m2'],0)
         
-        #auxdf=self.df.query('precio_m2_usd>10000').filter(items=['precio_m2_usd','price_aprox_usd','surface_total_in_m2'])
-        #print(auxdf)
-        #print(self.df['precio_m2_usd'])
         
         #ARREGLAR LATITUD Y LONGITUD A PARTIR DE LA COLUMNA LAT-LON
         latlongdf=self.df['lat-lon'].str.split(",",expand=True)
@@ -131,16 +168,18 @@ class tp1_ETL:
             self.df.at[index,"property_type_code"]=auxval
             #print("row.property_type:",row.property_type)
             
-            qryfiltro="place_name=='" + row.place_name + "'"
-            qryfiltro+=" and (m2_Desde<=" + str(row.surface_total_in_m2) 
-            qryfiltro+=" and m2_Hasta>=" + str(row.surface_total_in_m2) + ")"
-            
-            auxval=self.df_m2.query(qryfiltro).Valor_usd
-            #print("auxval:" , auxval)
-            #print("len(auxval):" , len(auxval))
-            
-            if (len(auxval)>=2):
-              self.df.at[index,"price_usd_per_m2"]=auxval[1]
+            if (self.df.at[index,"price_usd_per_m2"] == 0):
+                qryfiltro="place_name=='" + row.place_name + "'"
+                qryfiltro+=" and (m2_Desde<=" + str(row.surface_total_in_m2) 
+                qryfiltro+=" and m2_Hasta>=" + str(row.surface_total_in_m2) + ")"
+                
+                auxval=self.df_m2.query(qryfiltro).Valor_usd
+                #print("auxval:" , auxval)
+                #print("len(auxval):" , len(auxval))
+                
+                if (len(auxval)>=2):
+                  self.df.at[index,"price_usd_per_m2"]=auxval[1]
+                  self.df.at[index,"price_aprox_usd"]=self.df.at[index,"price_usd_per_m2"]*self.df.at[index,"surface_total_in_m2"]
         
         self.df.to_csv("Properati_CABA_DS_fixed.csv",encoding='utf-8')
         #uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})
