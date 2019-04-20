@@ -35,14 +35,17 @@ class tp1_ETL:
         #downloaded = drive.CreateFile({'id':id}) 
         #downloaded.GetContentFile('precioxm2_pais.csv')
         
-        self.df=pd.read_csv("Properati_CABA_DS.csv", encoding = 'utf8')
+        self.df=pd.read_csv("properati.csv", encoding = 'utf8')
+        #self.df=pd.read_hdf("properati_CABA.hdf",key="table")
         self.df_m2=pd.read_csv("precioxm2_pais.csv", encoding = 'utf8')
         print("DataSet registros:", len(self.df))
         print("DataSet Lookup Precio x m2:", len(self.df_m2))
-        VALOR_DOLAR=17.8305
+        
+        valor_Dolar=17.8305
         
         #DROPEAMOS VARIABLES NO INTERESANTES
         cols=['price', 'currency', 'country_name', 'price_aprox_local_currency','operation','lat','lon','properati_url','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id']
+        #cols=['price', 'currency', 'price_aprox_local_currency']
         self.df.drop(cols, axis=1, inplace=True)
         
         #FIJAR SCOPE EN CABA
@@ -93,7 +96,7 @@ class tp1_ETL:
         aux['price']=aux[1]+aux[2]+aux[3]
         aux['price']=aux['price'].astype('float64')
         aux=aux[['currency','price']]
-        aux.loc[aux['currency'] == 'ARS', 'price'] = aux.loc[:, 'price']/VALOR_DOLAR
+        aux.loc[aux['currency'] == 'ARS', 'price'] = aux.loc[:, 'price']/valor_Dolar
         self.df.loc[self.df['price_aprox_usd'].isnull(),'price_aprox_usd'] = aux.loc[:, 'price']
         
         aux = df1['description'].str.extract(r'(U?u?\$[SDsd]?)\s?(\d+)\.?(\d*)\.?(\d*)')
@@ -104,7 +107,7 @@ class tp1_ETL:
         aux['price']=aux[1]+aux[2]+aux[3]
         aux['price']=aux['price'].astype('float64')
         aux=aux[['currency','price']]
-        aux.loc[aux['currency'] == 'ARS', 'price'] = aux.loc[:, 'price']/VALOR_DOLAR
+        aux.loc[aux['currency'] == 'ARS', 'price'] = aux.loc[:, 'price']/valor_Dolar
         self.df.loc[self.df['price_aprox_usd'].isnull(),'price_aprox_usd'] = aux.loc[:, 'price']
         
         #COMPLETAR REGISTROS DESPUES DE LLENAR CON REGEX
@@ -135,7 +138,7 @@ class tp1_ETL:
         self.df['lat']=latlongdf.loc[:,0]
         self.df['lon']=latlongdf.loc[:,1]
         self.df.drop('lat-lon',axis=1,inplace=True)
-        self.df.drop('price_per_m2',axis=1,inplace=True)
+        #self.df.drop('price_per_m2',axis=1,inplace=True)
         
         #Convertir campos categoricos a valores enteros
         dfPlaces=pd.DataFrame(self.df["place_name"].unique(),columns=['name'])
@@ -207,5 +210,6 @@ class tp1_ETL:
         print("*****************************************************")
 
 x=tp1_ETL()
-#x.correlation_matrix()
-x.conteo_por_grupos()
+
+#x.conteo_por_grupos()
+
