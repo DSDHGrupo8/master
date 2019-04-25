@@ -35,7 +35,7 @@ class tp1_ETL:
         #downloaded = drive.CreateFile({'id':id}) 
         #downloaded.GetContentFile('precioxm2_pais.csv')
         
-        self.df=pd.read_csv("properati.csv", encoding = 'utf8')
+        self.df=pd.read_csv("C:\\Users\\Public\\properati.csv", encoding = 'utf8')
         #self.df=pd.read_hdf("properati_CABA.hdf",key="table")
         self.df_m2=pd.read_csv("precioxm2_pais.csv", encoding = 'utf8')
         print("DataSet registros:", len(self.df))
