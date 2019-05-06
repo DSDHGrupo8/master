@@ -151,9 +151,6 @@ class tp1_ETL:
         #print(dfPropertyTypes)
         
         auxval=0
-        self.df["state_code"]=0
-        self.df["place_code"]=0
-        self.df["property_type_code"]=0
         qryfiltro=""
         
         for index, row in self.df.iterrows():
@@ -177,7 +174,7 @@ class tp1_ETL:
         #dummificar las variables
         dummies_state=pd.get_dummies(df['state_name'],prefix='dummy_state_',drop_first=True)
         dummies_place=pd.get_dummies(df['place_name'],prefix='dummy_place_',drop_first=True)
-        dummies_property=pd.get_dummies(df['property_type'],prefix='dummy_property_',drop_first=True)
+        dummies_property=pd.get_dummies(df['property_type'],prefix='dummy_property_type_',drop_first=True)
         
         self.df.join(dummies_state)
         self.df.join(dummies_place)
