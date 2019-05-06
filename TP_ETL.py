@@ -175,9 +175,9 @@ class tp1_ETL:
                   self.df.at[index,"price_aprox_usd"]=self.df.at[index,"price_usd_per_m2"]*self.df.at[index,"surface_total_in_m2"]
                   
         #dummificar las variables
-        dummies_state=pd.get_dummies(df['state_name'],prefix='state_',drop_first=True)
-        dummies_place=pd.get_dummies(df['place_name'],prefix='place_',drop_first=True)
-        dummies_property=pd.get_dummies(df['property_type'],prefix='property_',drop_first=True)
+        dummies_state=pd.get_dummies(df['state_name'],prefix='dummy_state_',drop_first=True)
+        dummies_place=pd.get_dummies(df['place_name'],prefix='dummy_place_',drop_first=True)
+        dummies_property=pd.get_dummies(df['property_type'],prefix='dummy_property_',drop_first=True)
         
         self.df.join(dummies_state)
         self.df.join(dummies_place)
