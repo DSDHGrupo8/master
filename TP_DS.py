@@ -26,8 +26,8 @@ class tp1_DS:
 
   def predecir(self):
 
-    
-    campos_entrada=['state_code','place_code','property_type_code','surface_total_in_m2','precio_m2_usd']
+    dummies_col_state = [col for col in df if col.startswith('dummy_')]
+    campos_entrada=[dummies_col_state,'surface_total_in_m2','precio_m2_usd']
     Xtrn, Xtest, Ytrn, Ytest = train_test_split(self.df[campos_entrada], self.df['price_aprox_usd'],
                       test_size=0.2)
     
