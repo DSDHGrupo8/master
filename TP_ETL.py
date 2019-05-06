@@ -158,18 +158,8 @@ class tp1_ETL:
         
         for index, row in self.df.iterrows():
           if (math.fmod(index,1000)==0):print("Processing row:", index)
-          self.df.at[index,"state_code"]=0
-          
-          if not (row.place_name is ''):
-            auxval=dfPlaces.query("name=='" + row.place_name + "'").ID
-            self.df.at[index,"place_code"]=auxval
-              
+
           if not (row.property_type is ''):
-            auxval=dfPropertyTypes.query("name=='" + row.property_type + "'").ID
-            #print("property_type", row.property_type)
-            #print("auxval found:", auxval)
-            self.df.at[index,"property_type_code"]=auxval
-            #print("row.property_type:",row.property_type)
             
             if (self.df.at[index,"price_usd_per_m2"] == 0):
                 qryfiltro="place_name=='" + row.place_name + "'"
@@ -183,6 +173,15 @@ class tp1_ETL:
                 if (len(auxval)>=2):
                   self.df.at[index,"price_usd_per_m2"]=auxval[1]
                   self.df.at[index,"price_aprox_usd"]=self.df.at[index,"price_usd_per_m2"]*self.df.at[index,"surface_total_in_m2"]
+                  
+        #dummificar las variables
+        dummies_state=pd.get_dummies(df['state_name'],prefix='state_',drop_first=True)
+        dummies_place=pd.get_dummies(df['place_name'],prefix='place_',drop_first=True)
+        dummies_property=pd.get_dummies(df['property_type'],prefix='property_',drop_first=True)
+        
+        self.df.join(dummies_state)
+        self.df.join(dummies_place)
+        self.df.join(dummies_property)
         
         self.df.to_csv("Properati_CABA_DS_fixed.csv",encoding='utf-8')
         #uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})
