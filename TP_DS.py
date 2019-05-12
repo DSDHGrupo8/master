@@ -23,13 +23,21 @@ class tp1_DS:
     print("Version de SciKit:" ,sk.__version__)
     self.df=pd.read_csv("Properati_CABA_DS_fixed.csv",encoding = 'utf8')
     print("Dataset cargado . Cantidad de registros del dataset:", len(self.df))
+    #print("columnas:", self.df.columns)
 
   def predecir(self):
 
-    dummies_col_state = [col for col in df if col.startswith('dummy_')]
-    campos_entrada=[dummies_col_state,'surface_total_in_m2','precio_m2_usd']
-    Xtrn, Xtest, Ytrn, Ytest = train_test_split(self.df[campos_entrada], self.df['price_aprox_usd'],
-                      test_size=0.2)
+    dummy_cols = [col for col in self.df if col.startswith('dummy_')]
+    #print("dummy columns:" , dummy_cols)
+    campos_entrada=dummy_cols + ['surface_total_in_m2','precio_m2_usd']
+    print("campos entrada:" , campos_entrada)
+    
+    inputDF=self.df[campos_entrada]
+    targetDF=self.df['price_aprox_usd']
+    
+    Xtrn, Xtest, Ytrn, Ytest = train_test_split(inputDF, 
+                                                targetDF,
+                                                test_size=0.2)
     
     #print("type of price_aprox_usd:" , type(Ytrn))
 

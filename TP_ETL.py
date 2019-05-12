@@ -160,6 +160,7 @@ class tp1_ETL:
             
             if (self.df.at[index,"price_usd_per_m2"] == 0):
                 qryfiltro="place_name=='" + row.place_name + "'"
+
                 qryfiltro+=" and (m2_Desde<=" + str(row.surface_total_in_m2) 
                 qryfiltro+=" and m2_Hasta>=" + str(row.surface_total_in_m2) + ")"
                 
@@ -172,15 +173,15 @@ class tp1_ETL:
                   self.df.at[index,"price_aprox_usd"]=self.df.at[index,"price_usd_per_m2"]*self.df.at[index,"surface_total_in_m2"]
                   
         #dummificar las variables
-        dummies_state=pd.get_dummies(df['state_name'],prefix='dummy_state_',drop_first=True)
-        dummies_place=pd.get_dummies(df['place_name'],prefix='dummy_place_',drop_first=True)
-        dummies_property=pd.get_dummies(df['property_type'],prefix='dummy_property_type_',drop_first=True)
+        #dummies_state=pd.get_dummies(self.df['state_name'],prefix='dummy_state_',drop_first=True)
+        dummies_place=pd.get_dummies(self.df['place_name'],prefix='dummy_place_',drop_first=True)
+        dummies_property=pd.get_dummies(self.df['property_type'],prefix='dummy_property_type_',drop_first=True)
         
-        self.df.join(dummies_state)
-        self.df.join(dummies_place)
-        self.df.join(dummies_property)
+        #self.df.join(dummies_state)
+        self.df=pd.concat([self.df,dummies_place],axis=1)
+        self.df=pd.concat([self.df,dummies_property],axis=1)
         
-        self.df.to_csv("Properati_CABA_DS_fixed.csv",encoding='utf-8')
+        self.df.to_csv("C:\\Users\\Public\\Properati_CABA_DS_fixed.csv",encoding='utf-8')
         #uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})
         #uploaded.SetContentFile("Properati_fixed.csv")
         #uploaded.Upload()
