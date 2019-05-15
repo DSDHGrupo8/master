@@ -19,6 +19,31 @@ df = df[df['place_name'] == 'Caballito']
 df.drop('state_name', axis=1, inplace=True)
 print("cantidad de registros:", len(df))
 
+df["pileta"]=0
+df["balcon"]=0
+df["patio"]=0
+df["lavadero"]=0
+df["cochera"]=0
+df["luminoso"]=0
+df["terraza"]=0
+df["quincho"]=0
+df["baulera"]=0
+df["parrilla"]=0
+df["premium"]=0
+df["piscina"]=0
+df["ascensor"]=0
+df["apto_credito"]=0
+df["profesional"]=0
+df["alarma"]=0
+df["amenities"]=0
+df["calefaccion"]=0
+df["aire_acondicionado"]=0
+df["pozo"]=0
+df["gimnasio"]=0
+df["spa"]=0
+df["jacuzzi"]=0
+df["cine"]=0
+
 #print(str(df["description"]))
 L=list(df["description"])
 str1=''.join(map(str, L))
