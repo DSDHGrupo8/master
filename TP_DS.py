@@ -11,6 +11,7 @@ from sklearn.svm import SVR
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import StandardScaler 
 #from sklearn import svm
 
 import datetime
@@ -21,7 +22,7 @@ class tp1_DS:
     
   def __init__(self):
     print("Version de SciKit:" ,sk.__version__)
-    self.df=pd.read_csv("Properati_CABA_DS_fixed.csv",encoding = 'utf8')
+    self.df=pd.read_csv("properati_caballito.csv",encoding = 'utf8')
     print("Dataset cargado . Cantidad de registros del dataset:", len(self.df))
     #print("columnas:", self.df.columns)
 
@@ -32,8 +33,15 @@ class tp1_DS:
     campos_entrada=dummy_cols + ['surface_total_in_m2','precio_m2_usd']
     print("campos entrada:" , campos_entrada)
     
-    inputDF=self.df[campos_entrada]
-    targetDF=self.df['price_aprox_usd']
+    # Escalamos la data (normalización)
+    scaler = StandardScaler() 
+    
+    inputDF=scaler.fit_transform(self.df[campos_entrada])
+    targetDF=scaler.fit_transform(self.df['price_aprox_usd'])
+    
+    
+    #TODO:Falta la parte de regularización (se recomendó usar Lasso)
+    
     
     Xtrn, Xtest, Ytrn, Ytest = train_test_split(inputDF, 
                                                 targetDF,

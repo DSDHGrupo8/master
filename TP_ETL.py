@@ -48,9 +48,11 @@ class tp1_ETL:
         #cols=['price', 'currency', 'price_aprox_local_currency']
         self.df.drop(cols, axis=1, inplace=True)
 
-        #FIJAR SCOPE EN CABA
+        #FIJAR SCOPE EN CABA - Caballito
         self.df = self.df[self.df['state_name'] == 'Capital Federal']
+        self.df = self.df[self.df['place_name'] == 'Caballito']
         self.df.drop('state_name', axis=1, inplace=True)
+        print("cantidad de registros:", len(self.df))
 
         #CORRECCION DE M2 TOTALES
         df1 = self.df[self.df['surface_total_in_m2'].isnull()]
@@ -172,9 +174,15 @@ class tp1_ETL:
                   self.df.at[index,"price_usd_per_m2"]=auxval[1]
 
         #dummificar las variables
-        #dummies_state=pd.get_dummies(self.df['state_name'],prefix='dummy_state_',drop_first=True)
         dummies_place=pd.get_dummies(self.df['place_name'],prefix='dummy_place_',drop_first=True)
         dummies_property=pd.get_dummies(self.df['property_type'],prefix='dummy_property_type_',drop_first=True)
+        
+        vcols=["pileta","balcon","patio","lavadero","cochera","luminoso","terraza","quincho",
+         "baulera","parrilla","premium","piscina","ascensor","profesional","alarma",
+         "amenities","calefaccion","pozo","gimnasio","aire acondicionado","spa","jacuzzi","cine"]
+
+        for x in vcols:
+            self.df["dummy_" + x]=self.df["description"].str.contains(x).astype(int)
 
         #self.df.join(dummies_state)
         self.df=pd.concat([self.df,dummies_place],axis=1)
