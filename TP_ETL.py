@@ -18,6 +18,19 @@ pd.options.display.float_format = '{:.2f}'.format
 
 class tp1_ETL:
 
+    def calcularDistancia(lat1, lon1, lat2, lon2):
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return R * c
+
+    def distanciaMinima(lat, lon):
+        listaDistancias = []
+        for index, row in subte.iterrows():
+            listaDistancias.append(calcularDistancia(radians(lat), radians(lon), radians(row['lat']), radians(row['lon'])))
+        return min(listaDistancias)
+
     def __init__(self):
         #Authenticate and create the PyDrive client.
         #auth.authenticate_user()
@@ -38,10 +51,13 @@ class tp1_ETL:
         self.df=pd.read_csv("C:\\Users\\Public\\properati.csv", encoding = 'utf8')
         #self.df=pd.read_hdf("properati_CABA.hdf",key="table")
         self.df_m2=pd.read_csv("precioxm2_pais.csv", encoding = 'utf8')
+        self.subte=pd.read_csv("estaciones-de-subte.csv", encoding = 'utf8')
+        self.subte=self.subte[['lon', 'lat']]
         print("DataSet registros:", len(self.df))
         print("DataSet Lookup Precio x m2:", len(self.df_m2))
 
         valor_Dolar=17.8305
+        R = 6373.0
 
         #DROPEAMOS VARIABLES NO INTERESANTES
         cols=['price', 'currency', 'country_name', 'price_aprox_local_currency','operation','lat','lon','properati_url','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id']
@@ -156,6 +172,9 @@ class tp1_ETL:
         qryfiltro=""
 
         for index, row in self.df.iterrows():
+
+          self.df.at[index,"distSubte"] = distanciaMinima(self.df.at[index,"lat"], self.df.at[index,"lon"])
+
           if (math.fmod(index,1000)==0):print("Processing row:", index)
 
           if not (row.property_type is ''):
@@ -173,10 +192,11 @@ class tp1_ETL:
                 if (len(auxval)>=2):
                   self.df.at[index,"price_usd_per_m2"]=auxval[1]
 
+
         #dummificar las variables
         dummies_place=pd.get_dummies(self.df['place_name'],prefix='dummy_place_',drop_first=True)
         dummies_property=pd.get_dummies(self.df['property_type'],prefix='dummy_property_type_',drop_first=True)
-        
+
         vcols=["pileta","balcon","patio","lavadero","cochera","luminoso","terraza","quincho",
          "baulera","parrilla","premium","piscina","ascensor","profesional","alarma",
          "amenities","calefaccion","pozo","gimnasio","aire acondicionado","spa","jacuzzi","cine"]
