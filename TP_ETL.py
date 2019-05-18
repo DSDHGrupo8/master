@@ -62,7 +62,6 @@ class tp1_ETL:
         #downloaded.GetContentFile('precioxm2_pais.csv')
 
         self.df=pd.read_csv("C:\\Users\\Public\\properati.csv", encoding = 'utf8')
-        #self.df=pd.read_hdf("properati_CABA.hdf",key="table")
         self.df_m2=pd.read_csv("precioxm2_pais.csv", encoding = 'utf8')
         self.subte=pd.read_csv("estaciones-de-subte.csv", encoding = 'utf8')
         self.subte=self.subte[['lon', 'lat']]
@@ -82,11 +81,12 @@ class tp1_ETL:
         self.df.drop('state_name', axis=1, inplace=True)
         print("cantidad de registros:", len(self.df))
         
-        #dummificar las variables
-        dummies_place=pd.get_dummies(self.df['place_name'],prefix='dummy_place_',drop_first=True)
+        #dummificar las variables place_name y property_type
+        #dummies_place=pd.get_dummies(self.df['place_name'],prefix='dummy_place_',drop_first=True)
         dummies_property=pd.get_dummies(self.df['property_type'],prefix='dummy_property_type_',drop_first=True)
-        self.df=pd.concat([self.df,dummies_place],axis=1)
         self.df=pd.concat([self.df,dummies_property],axis=1)
+        #self.df=pd.concat([self.df,dummies_place],axis=1)
+        
 
         #CORRECCION DE M2 TOTALES
         df1 = self.df[self.df['surface_total_in_m2'].isnull()]
@@ -150,7 +150,7 @@ class tp1_ETL:
         self.df.dropna(subset=['surface_total_in_m2', 'surface_covered_in_m2'], how='all', inplace=True)
         self.df.loc[(self.df['surface_total_in_m2'].isnull()) & (self.df['surface_covered_in_m2'].notnull()), 'surface_total_in_m2'] = self.df.loc[:, 'surface_covered_in_m2']
         self.df.loc[(self.df['price_usd_per_m2'].isnull()) & (self.df['price_aprox_usd'].notnull()) & (self.df['surface_total_in_m2'].notnull()), 'price_usd_per_m2'] = self.df.loc[:, 'price_aprox_usd']/self.df.loc[:, 'surface_total_in_m2']
-
+        
 
         #FILTRAR OUTLIERS
         qryFiltro="(price_aprox_usd >= 10000 and price_aprox_usd <= 1000000)"
@@ -219,11 +219,15 @@ class tp1_ETL:
         for x in vcols:
             self.df["dummy_" + x]=self.df["description"].str.contains(x).astype(int)
 
-        #self.df.join(dummies_state)
-        self.df=pd.concat([self.df,dummies_place],axis=1)
-        self.df=pd.concat([self.df,dummies_property],axis=1)
+        #LIMPIAR BASURA
+        self.df=self.df[pd.to_numeric(self.df['dummy_property_type__store'], errors='coerce').notnull()]
+        self.df=self.df[pd.to_numeric(self.df['dummy_property_type__apartment'], errors='coerce').notnull()]
+        self.df=self.df[pd.to_numeric(self.df['dummy_property_type__house'], errors='coerce').notnull()]
+        
+        
 
         self.df.to_csv("properati_caballito.csv",encoding='utf-8')
+        print("campos de salida:", self.df.columns)
         #uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})
         #uploaded.SetContentFile("Properati_fixed.csv")
         #uploaded.Upload()
