@@ -29,8 +29,8 @@ class tp1_ETL:
 
     def distanciaMinima(self,lat, lon):
         listaDistancias = []
-        print("lat:", lat)
-        print("lon:", lon)
+        #print("lat:", lat)
+        #print("lon:", lon)
         for index, row in self.subte.iterrows():
             if ((lat is not None) and (lon is not None)):
                 flat=float(lat)
@@ -223,7 +223,7 @@ class tp1_ETL:
         self.df=pd.concat([self.df,dummies_place],axis=1)
         self.df=pd.concat([self.df,dummies_property],axis=1)
 
-        self.df.to_csv("C:\\Users\\Public\\Properati_Caballito.csv",encoding='utf-8')
+        self.df.to_csv("properati_caballito.csv",encoding='utf-8')
         #uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})
         #uploaded.SetContentFile("Properati_fixed.csv")
         #uploaded.Upload()
