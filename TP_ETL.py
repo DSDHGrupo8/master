@@ -17,21 +17,24 @@ pd.set_option('display.expand_frame_repr', False)
 pd.options.display.float_format = '{:.2f}'.format
 
 class tp1_ETL:
+    
 
-    def calcularDistancia(lat1, lon1, lat2, lon2):
+
+    def calcularDistancia(self,lat1, lon1, lat2, lon2):
         dlon = lon2 - lon1
         dlat = lat2 - lat1
-        a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
-        c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        return R * c
+        a =math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return self.R * c
 
-    def distanciaMinima(lat, lon):
+    def distanciaMinima(self,lat, lon):
         listaDistancias = []
-        for index, row in subte.iterrows():
-            listaDistancias.append(calcularDistancia(radians(lat), radians(lon), radians(row['lat']), radians(row['lon'])))
+        for index, row in self.subte.iterrows():
+            listaDistancias.append(self.calcularDistancia(math.radians(lat), math.radians(lon), math.radians(row['lat']), math.radians(row['lon'])))
         return min(listaDistancias)
 
     def __init__(self):
+        self.R = 6373.0
         #Authenticate and create the PyDrive client.
         #auth.authenticate_user()
         #gauth = GoogleAuth()
@@ -57,8 +60,7 @@ class tp1_ETL:
         print("DataSet Lookup Precio x m2:", len(self.df_m2))
 
         valor_Dolar=17.8305
-        R = 6373.0
-
+        
         #DROPEAMOS VARIABLES NO INTERESANTES
         cols=['price', 'currency', 'country_name', 'price_aprox_local_currency','operation','lat','lon','properati_url','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id']
         #cols=['price', 'currency', 'price_aprox_local_currency']
@@ -173,7 +175,7 @@ class tp1_ETL:
 
         for index, row in self.df.iterrows():
 
-          self.df.at[index,"distSubte"] = distanciaMinima(self.df.at[index,"lat"], self.df.at[index,"lon"])
+          self.df.at[index,"distSubte"] = self.distanciaMinima(self.df.at[index,"lat"], self.df.at[index,"lon"])
 
           if (math.fmod(index,1000)==0):print("Processing row:", index)
 
@@ -208,7 +210,7 @@ class tp1_ETL:
         self.df=pd.concat([self.df,dummies_place],axis=1)
         self.df=pd.concat([self.df,dummies_property],axis=1)
 
-        self.df.to_csv("C:\\Users\\Public\\Properati_CABA_DS_fixed.csv",encoding='utf-8')
+        self.df.to_csv("C:\\Users\\Public\\Properati_Caballito.csv",encoding='utf-8')
         #uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})
         #uploaded.SetContentFile("Properati_fixed.csv")
         #uploaded.Upload()
