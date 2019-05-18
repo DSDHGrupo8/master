@@ -23,6 +23,8 @@ class tp1_DS:
   def __init__(self):
     print("Version de SciKit:" ,sk.__version__)
     self.df=pd.read_csv("properati_caballito.csv",encoding = 'utf8')
+    #print(self.df.head(5))
+   
     print("Dataset cargado . Cantidad de registros del dataset:", len(self.df))
     #print("columnas:", self.df.columns)
 
@@ -30,14 +32,15 @@ class tp1_DS:
 
     dummy_cols = [col for col in self.df if col.startswith('dummy_')]
     #print("dummy columns:" , dummy_cols)
-    campos_entrada=dummy_cols + ['surface_total_in_m2','precio_m2_usd']
+    campos_entrada=dummy_cols + ['surface_total_in_m2','price_usd_per_m2']
     print("campos entrada:" , campos_entrada)
     
     # Escalamos la data (normalización)
     scaler = StandardScaler() 
     
     inputDF=scaler.fit_transform(self.df[campos_entrada])
-    targetDF=scaler.fit_transform(self.df['price_aprox_usd'])
+    #print("precio aprox usd:", self.df['price_aprox_usd'].shape)    
+    targetDF=self.df['price_aprox_usd']
     
     
     #TODO:Falta la parte de regularización (se recomendó usar Lasso)
