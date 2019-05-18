@@ -29,9 +29,19 @@ class tp1_ETL:
 
     def distanciaMinima(self,lat, lon):
         listaDistancias = []
+        print("lat:", lat)
+        print("lon:", lon)
         for index, row in self.subte.iterrows():
-            listaDistancias.append(self.calcularDistancia(math.radians(lat), math.radians(lon), math.radians(row['lat']), math.radians(row['lon'])))
-        return min(listaDistancias)
+            if ((lat is not None) and (lon is not None)):
+                flat=float(lat)
+                flon=float(lon)
+            
+                listaDistancias.append(self.calcularDistancia(math.radians(flat), math.radians(flon), math.radians(float(row['lat'])), math.radians(float(row['lon']))))
+        
+        if (len(listaDistancias)>0):
+            return min(listaDistancias)
+        else:
+            return math.nan
 
     def __init__(self):
         self.R = 6373.0
@@ -62,7 +72,7 @@ class tp1_ETL:
         valor_Dolar=17.8305
         
         #DROPEAMOS VARIABLES NO INTERESANTES
-        cols=['price', 'currency', 'country_name', 'price_aprox_local_currency','operation','lat','lon','properati_url','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id']
+        cols=['price', 'currency', 'country_name', 'price_aprox_local_currency','operation','properati_url','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id']
         #cols=['price', 'currency', 'price_aprox_local_currency']
         self.df.drop(cols, axis=1, inplace=True)
 
@@ -71,6 +81,12 @@ class tp1_ETL:
         self.df = self.df[self.df['place_name'] == 'Caballito']
         self.df.drop('state_name', axis=1, inplace=True)
         print("cantidad de registros:", len(self.df))
+        
+        #dummificar las variables
+        dummies_place=pd.get_dummies(self.df['place_name'],prefix='dummy_place_',drop_first=True)
+        dummies_property=pd.get_dummies(self.df['property_type'],prefix='dummy_property_type_',drop_first=True)
+        self.df=pd.concat([self.df,dummies_place],axis=1)
+        self.df=pd.concat([self.df,dummies_property],axis=1)
 
         #CORRECCION DE M2 TOTALES
         df1 = self.df[self.df['surface_total_in_m2'].isnull()]
@@ -195,10 +211,7 @@ class tp1_ETL:
                   self.df.at[index,"price_usd_per_m2"]=auxval[1]
 
 
-        #dummificar las variables
-        dummies_place=pd.get_dummies(self.df['place_name'],prefix='dummy_place_',drop_first=True)
-        dummies_property=pd.get_dummies(self.df['property_type'],prefix='dummy_property_type_',drop_first=True)
-
+     
         vcols=["pileta","balcon","patio","lavadero","cochera","luminoso","terraza","quincho",
          "baulera","parrilla","premium","piscina","ascensor","profesional","alarma",
          "amenities","calefaccion","pozo","gimnasio","aire acondicionado","spa","jacuzzi","cine"]
