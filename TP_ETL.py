@@ -227,12 +227,15 @@ class tp1_ETL:
         self.df=self.df[pd.to_numeric(self.df['dummy_property_type__house'], errors='coerce').notnull()]
         
         #HACEMOS EL recorte 20% test, 80% - DESACTIVADO
-        cant_regs_train=len(self.df)/100*80
-        cant_regs_test=len(self.df)/100*20
-        df_test=self.df[cant_regs_train:len(self.df),:]
+        cant_regs_total=len(self.df)
+        print("cant. regs. totales:", cant_regs_total)
+        cant_regs_train=math.trunc((cant_regs_total/100)*80)
+        print("cant. regs. train:", cant_regs_train)
+        df_test=self.df.iloc[cant_regs_train:cant_regs_total,:]
+        print("df_test:" ,len(df_test))
         df_test["price_usd_per_m2"]=0
         df_test.to_csv("properati_caballito_test.csv",encoding="utf8")
-        self.df=self.df[:cant_regs_train,:]
+        self.df=self.df.iloc[:cant_regs_train,:]
 
         self.df.to_csv("properati_caballito_train.csv",encoding='utf-8')
         print("campos de salida:", self.df.columns)
@@ -243,23 +246,4 @@ class tp1_ETL:
         print("All done!")
 
 
-    def correrAnalisis(self):
-
-
-        print("Conteo total de registros sin nulos en price y surface_total:" , str(len(self.df3)))
-
-        #print(precioSerie)
-
-
-        print("**********************DF2*******************************")
-        print(self.df2.describe())
-        print("*****************************************************")
-
-
-        print("**********************DF3*******************************")
-        print(self.df3.describe())
-        print("*****************************************************")
-
 x=tp1_ETL()
-
-#x.conteo_por_grupos()

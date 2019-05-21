@@ -12,6 +12,8 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler 
+
+from sklearn.preprocessing import PolynomialFeatures
 #from sklearn import svm
 
 import datetime
@@ -22,7 +24,7 @@ class tp1_DS:
     
   def __init__(self):
     print("Version de SciKit:" ,sk.__version__)
-    self.df=pd.read_csv("properati_caballito.csv",encoding = 'utf8')
+    self.df=pd.read_csv("properati_caballito_test.csv",encoding = 'utf8')
     #print(self.df.head(5))
    
     print("Dataset cargado . Cantidad de registros del dataset:", len(self.df))
