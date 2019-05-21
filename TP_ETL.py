@@ -81,6 +81,8 @@ class tp1_ETL:
         self.df.drop('state_name', axis=1, inplace=True)
         print("cantidad de registros:", len(self.df))
         
+      
+        
         #dummificar las variables place_name y property_type
         #dummies_place=pd.get_dummies(self.df['place_name'],prefix='dummy_place_',drop_first=True)
         dummies_property=pd.get_dummies(self.df['property_type'],prefix='dummy_property_type_',drop_first=True)
@@ -224,9 +226,15 @@ class tp1_ETL:
         self.df=self.df[pd.to_numeric(self.df['dummy_property_type__apartment'], errors='coerce').notnull()]
         self.df=self.df[pd.to_numeric(self.df['dummy_property_type__house'], errors='coerce').notnull()]
         
-        
+        #HACEMOS EL recorte 20% test, 80% - DESACTIVADO
+        cant_regs_train=len(self.df)/100*80
+        cant_regs_test=len(self.df)/100*20
+        df_test=self.df[cant_regs_train:len(self.df),:]
+        df_test["price_usd_per_m2"]=0
+        df_test.to_csv("properati_caballito_test.csv",encoding="utf8")
+        self.df=self.df[:cant_regs_train,:]
 
-        self.df.to_csv("properati_caballito.csv",encoding='utf-8')
+        self.df.to_csv("properati_caballito_train.csv",encoding='utf-8')
         print("campos de salida:", self.df.columns)
         #uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})
         #uploaded.SetContentFile("Properati_fixed.csv")
