@@ -5,6 +5,9 @@ import re
 import matplotlib.pyplot as plt
 from statistics import mode
 from matplotlib import cm as cm
+from shapely import wkt
+from shapely.geometry import Point, Polygon, MultiPolygon, LinearRing
+import geopandas as gpd
 
 #from pydrive.auth import GoogleAuth
 #from pydrive.drive import GoogleDrive
@@ -17,27 +20,25 @@ pd.set_option('display.expand_frame_repr', False)
 pd.options.display.float_format = '{:.2f}'.format
 
 class tp1_ETL:
-    
-
-
+   
     def calcularDistancia(self,lat1, lon1, lat2, lon2):
         dlon = lon2 - lon1
         dlat = lat2 - lat1
         a =math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         return self.R * c
-
-    def distanciaMinima(self,lat, lon):
+       
+    def distanciaMinimaParque(self, lat, lon):
         listaDistancias = []
-        #print("lat:", lat)
-        #print("lon:", lon)
-        for index, row in self.subte.iterrows():
-            if ((lat is not None) and (lon is not None)):
-                flat=float(lat)
-                flon=float(lon)
-            
-                listaDistancias.append(self.calcularDistancia(math.radians(flat), math.radians(flon), math.radians(float(row['lat'])), math.radians(float(row['lon']))))
-        
+        if ((lat is not None) and (lon is not None)):
+            flat=float(lat)
+            flon=float(lon)    
+        for index, row in self.parques.iterrows():
+            d = self.parques.at[index,"Arcos"].project(Point(flon,flat))
+            p = self.parques.at[index,"Arcos"].interpolate(d)
+            pmc = list(p.coords)[0]
+            listaDistancias.append(self.calcularDistancia(math.radians(flat), math.radians(flon), math.radians(float(pmc[1])), math.radians(float(pmc[0]))))
+       
         if (len(listaDistancias)>0):
             return min(listaDistancias)
         else:
@@ -64,12 +65,27 @@ class tp1_ETL:
         self.df=pd.read_csv("C:\\Users\\Public\\properati.csv", encoding = 'utf8')
         self.df_m2=pd.read_csv("datasets\\precioxm2_pais.csv", encoding = 'utf8')
         self.subte=pd.read_csv("datasets\\estaciones-de-subte.csv", encoding = 'utf8')
-        self.subte=self.subte[['lon', 'lat']]
+        self.subtes=self.subtes[['lon', 'lat']]
+        self.hospitales=pd.read_csv("datasets\\hospitales.csv", encoding = 'utf8')
+        self.escuelas=pd.read_csv("datasets\\escuelas.csv", encoding = 'utf8')
+        self.parques=pd.read_csv("datasets\\arcos.csv", encoding = 'utf8')
+        self.barrios=pd.read_csv('datasets\\barrios.csv', encoding = 'utf8')
+        self.barrios['WKT'] = self.barrios['WKT'].apply(wkt.loads)
+        self.barrios=gpd.GeoDataFrame(geometry=self.barrios.WKT)
+        self.parques['Arcos'] = self.parques['Arcos'].apply(wkt.loads)
+       
+        self.subtes_gdf = gpd.GeoDataFrame(self.subtes, geometry=[Point(x, y) for x, y in zip(self.subtes.lon, self.subtes.lat)], crs={'init': 'epsg:4326'})
+        self.subtes_gdf.to_crs(epsg=22196,inplace=True)
+        self.hospitales_gdf = gpd.GeoDataFrame(self.hospitales, geometry=[Point(x, y) for x, y in zip(self.hospitales.lon, self.hospitales.lat)], crs={'init': 'epsg:4326'})
+        self.hospitales_gdf.to_crs(epsg=22196,inplace=True)
+        self.escuelas_gdf = gpd.GeoDataFrame(self.escuelas, geometry=[Point(x, y) for x, y in zip(self.escuelas.lon, self.escuelas.lat)], crs={'init': 'epsg:4326'})
+        self.escuelas_gdf.to_crs(epsg=22196,inplace=True)
+       
         print("DataSet registros:", len(self.df))
         print("DataSet Lookup Precio x m2:", len(self.df_m2))
 
         valor_Dolar=17.8305
-        
+       
         #DROPEAMOS VARIABLES NO INTERESANTES
         cols=['price', 'currency', 'country_name', 'price_aprox_local_currency','operation','properati_url','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id']
         #cols=['price', 'currency', 'price_aprox_local_currency']
@@ -77,23 +93,30 @@ class tp1_ETL:
 
         #FIJAR SCOPE EN CABA - Caballito
         self.df = self.df[self.df['state_name'] == 'Capital Federal']
-        self.df = self.df[self.df['place_name'] == 'Caballito']
+
+        self.df['lon'].fillna(0, inplace=True)
+        self.df['lat'].fillna(0, inplace=True)
+        self.df = gpd.GeoDataFrame(self.df, geometry=[Point(x, y) for x, y in zip(self.df.lon, self.df.lat)])
+        self.df = gpd.sjoin(self.df, barrios, how='inner')
+        self.df.loc[:, 'place_name'] = 'Caballito'
+        
         self.df.drop('state_name', axis=1, inplace=True)
         print("cantidad de registros:", len(self.df))
-        
-      
-        
+     
+       
         #dummificar las variables place_name y property_type
         #dummies_place=pd.get_dummies(self.df['place_name'],prefix='dummy_place_',drop_first=True)
         dummies_property=pd.get_dummies(self.df['property_type'],prefix='dummy_property_type_',drop_first=True)
         self.df=pd.concat([self.df,dummies_property],axis=1)
         #self.df=pd.concat([self.df,dummies_place],axis=1)
-        
+		
+
         #IMPUTAMOS EXPENSAS POR EL PROMEDIO
         promedio_exp=round(self.df['expenses'].mean(),2)
         print("promedio expensas:", promedio_exp)
         self.df['expenses']=self.df['expenses'].fillna(promedio_exp)
-        
+	
+       
 
         #CORRECCION DE M2 TOTALES
         df1 = self.df[self.df['surface_total_in_m2'].isnull()]
@@ -157,7 +180,7 @@ class tp1_ETL:
         self.df.dropna(subset=['surface_total_in_m2', 'surface_covered_in_m2'], how='all', inplace=True)
         self.df.loc[(self.df['surface_total_in_m2'].isnull()) & (self.df['surface_covered_in_m2'].notnull()), 'surface_total_in_m2'] = self.df.loc[:, 'surface_covered_in_m2']
         self.df.loc[(self.df['price_usd_per_m2'].isnull()) & (self.df['price_aprox_usd'].notnull()) & (self.df['surface_total_in_m2'].notnull()), 'price_usd_per_m2'] = self.df.loc[:, 'price_aprox_usd']/self.df.loc[:, 'surface_total_in_m2']
-        
+       
 
         #FILTRAR OUTLIERS
         qryFiltro="(price_aprox_usd >= 10000 and price_aprox_usd <= 2000000)"
@@ -195,29 +218,41 @@ class tp1_ETL:
 
         auxval=0
         qryfiltro=""
-
-        rowcounter=0
-        
+		rowcounter=0		
+		
+        self.df.reset_index(drop=True, inplace=True)
+       
         for index, row in self.df.iterrows():
-          rowcounter+=1
-          self.df.at[index,"distSubte"] = self.distanciaMinima(self.df.at[index,"lat"], self.df.at[index,"lon"])
+            
+			rowcounter+=1
+			
+            aux = pd.Series(Point(float(self.df.at[index,"lon"]), float(self.df.at[index,"lat"])))
+            aux = gpd.GeoDataFrame(aux, geometry=aux, crs={'init':'epsg:4326'})
+            aux.to_crs(epsg=22196,inplace=True)
+            aux = aux.loc[0,'geometry']
 
-          if (math.fmod(rowcounter,100)==0):print("Processing row:", rowcounter)
+            self.df.at[index,"distSubte"] = min(self.subtes_gdf.distance(aux))
+            self.df.at[index,"distEscuela"] = min(self.escuelas_gdf.distance(aux))
+            self.df.at[index,"distHospital"] = min(self.hospitales_gdf.distance(aux))
+            self.df.at[index,"distParque"] = self.distanciaMinimaParque(self.df.at[index,"lat"], self.df.at[index,"lon"])
+       
+       
+            if (math.fmod(rowcounter,100)==0):print("Processing row:", rowcounter)
 
-          if not (row.property_type is ''):
+            if not (row.property_type is ''):
 
-            if (self.df.at[index,"price_usd_per_m2"] == 0):
-                qryfiltro="place_name=='" + row.place_name + "'"
+                if (self.df.at[index,"price_usd_per_m2"] == 0):
+                    qryfiltro="place_name=='" + row.place_name + "'"
 
-                qryfiltro+=" and (m2_Desde<=" + str(row.surface_total_in_m2)
-                qryfiltro+=" and m2_Hasta>=" + str(row.surface_total_in_m2) + ")"
+                    qryfiltro+=" and (m2_Desde<=" + str(row.surface_total_in_m2)
+                    qryfiltro+=" and m2_Hasta>=" + str(row.surface_total_in_m2) + ")"
 
-                auxval=self.df_m2.query(qryfiltro).Valor_usd
-                #print("auxval:" , auxval)
-                #print("len(auxval):" , len(auxval))
+                    auxval=self.df_m2.query(qryfiltro).Valor_usd
+                    #print("auxval:" , auxval)
+                    #print("len(auxval):" , len(auxval))
 
-                if (len(auxval)>=2):
-                  self.df.at[index,"price_usd_per_m2"]=auxval[1]
+                    if (len(auxval)>=2):
+                      self.df.at[index,"price_usd_per_m2"]=auxval[1]
 
 
      
@@ -230,12 +265,10 @@ class tp1_ETL:
                "spa","split","solarium","sum","S.U.M","subte","suite","seguridad","terraza","vigilancia"]
 
         #for x in vcols:
-        #    self.df["dummy_" + x]=self.df["title"].str.contains(x).astype(int)        
+        #    self.df["dummy_" + x]=self.df["title"].str.contains(x).astype(int)
 
         for x in vcols:
             self.df["dummy_" + x]=self.df["description"].str.contains(x).astype(int)
-        
-            
 
         #LIMPIAR BASURA
         self.df=self.df[pd.to_numeric(self.df['dummy_property_type__store'], errors='coerce').notnull()]
@@ -244,12 +277,12 @@ class tp1_ETL:
         self.df=self.df[pd.to_numeric(self.df['lat'], errors='coerce').notnull()]
         self.df=self.df[pd.to_numeric(self.df['lon'], errors='coerce').notnull()]
         self.df=self.df[pd.to_numeric(self.df['distSubte'], errors='coerce').notnull()]
-        
+
 
 
         #Guardamos el dataset antes del recorte
-        self.df.to_csv("datasets\\properati_caballito.csv",encoding='utf-8')
-        
+        self.df.to_csv("datasets\\properati_caballito.csv",encoding='utf-8')		
+       
         #HACEMOS EL recorte 20% test, 80% - DESACTIVADO
         cant_regs_total=len(self.df)
         print("cant. regs. totales:", cant_regs_total)
