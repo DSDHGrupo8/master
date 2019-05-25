@@ -47,13 +47,15 @@ print(df.loc[:,'tipo'].value_counts().to_frame())
 print(df.loc[:,'barrio'].value_counts().to_frame().head(10))
 
 #distribución de propiedades por barrio según precio y superficie total
-sns.lmplot(x="sup_total", y="precio", data = df, hue = 'barrio', height=10, fit_reg=False);
+#sns.lmplot(x="sup_total", y="precio", data = df, hue = 'barrio', height=10, fit_reg=False);
+sns.lmplot(x="sup_total", y="precio", data = df, hue = 'barrio', fit_reg=False);
 plt.savefig('distribución de propiedades por barrio según precio y superficie total')
 
 #Medias de precio y superficie por barrio ordenadas de mayor (rojo) a menor (azul)
 df_means = df[['precio','sup_total','barrio']].groupby(['barrio']).mean().sort_values('precio', ascending = False)
 df_means.reset_index(inplace = True)
-sns.lmplot(x="sup_total", y="precio", data = df_means, hue = 'barrio', palette = 'RdYlGn', height=10, fit_reg=False)
+#sns.lmplot(x="sup_total", y="precio", data = df_means, hue = 'barrio', palette = 'RdYlGn', height=10, fit_reg=False)
+sns.lmplot(x="sup_total", y="precio", data = df_means, hue = 'barrio', palette = 'RdYlGn', fit_reg=False)
 plt.savefig('Medias de precio y superficie por barrio ordenadas de mayor (rojo) a menor (verde)')
 
 #Grilla de pares de precio y superficie total

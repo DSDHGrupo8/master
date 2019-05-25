@@ -65,7 +65,7 @@ class tp1_ETL:
         self.df=pd.read_csv("C:\\Users\\Public\\properati.csv", encoding = 'utf8')
         self.df_m2=pd.read_csv("datasets\\precioxm2_pais.csv", encoding = 'utf8')
         self.subte=pd.read_csv("datasets\\estaciones-de-subte.csv", encoding = 'utf8')
-        self.subtes=self.subtes[['lon', 'lat']]
+        self.subtes=self.subte[['lon', 'lat']]
         self.hospitales=pd.read_csv("datasets\\hospitales.csv", encoding = 'utf8')
         self.escuelas=pd.read_csv("datasets\\escuelas.csv", encoding = 'utf8')
         self.parques=pd.read_csv("datasets\\arcos.csv", encoding = 'utf8')
@@ -97,7 +97,7 @@ class tp1_ETL:
         self.df['lon'].fillna(0, inplace=True)
         self.df['lat'].fillna(0, inplace=True)
         self.df = gpd.GeoDataFrame(self.df, geometry=[Point(x, y) for x, y in zip(self.df.lon, self.df.lat)])
-        self.df = gpd.sjoin(self.df, barrios, how='inner')
+        self.df = gpd.sjoin(self.df, self.barrios, how='inner')
         self.df.loc[:, 'place_name'] = 'Caballito'
         
         self.df.drop('state_name', axis=1, inplace=True)
@@ -218,39 +218,35 @@ class tp1_ETL:
 
         auxval=0
         qryfiltro=""
-		rowcounter=0		
+        rowcounter=0	
 		
         self.df.reset_index(drop=True, inplace=True)
        
         for index, row in self.df.iterrows():
+            rowcounter+=1
+            if (math.fmod(rowcounter,100)==0):print("Processing row:", rowcounter)
             
-			rowcounter+=1
-			
             aux = pd.Series(Point(float(self.df.at[index,"lon"]), float(self.df.at[index,"lat"])))
             aux = gpd.GeoDataFrame(aux, geometry=aux, crs={'init':'epsg:4326'})
             aux.to_crs(epsg=22196,inplace=True)
             aux = aux.loc[0,'geometry']
-
+    
             self.df.at[index,"distSubte"] = min(self.subtes_gdf.distance(aux))
             self.df.at[index,"distEscuela"] = min(self.escuelas_gdf.distance(aux))
             self.df.at[index,"distHospital"] = min(self.hospitales_gdf.distance(aux))
             self.df.at[index,"distParque"] = self.distanciaMinimaParque(self.df.at[index,"lat"], self.df.at[index,"lon"])
-       
-       
-            if (math.fmod(rowcounter,100)==0):print("Processing row:", rowcounter)
 
             if not (row.property_type is ''):
-
+            
                 if (self.df.at[index,"price_usd_per_m2"] == 0):
                     qryfiltro="place_name=='" + row.place_name + "'"
-
                     qryfiltro+=" and (m2_Desde<=" + str(row.surface_total_in_m2)
                     qryfiltro+=" and m2_Hasta>=" + str(row.surface_total_in_m2) + ")"
 
                     auxval=self.df_m2.query(qryfiltro).Valor_usd
                     #print("auxval:" , auxval)
                     #print("len(auxval):" , len(auxval))
-
+            
                     if (len(auxval)>=2):
                       self.df.at[index,"price_usd_per_m2"]=auxval[1]
 

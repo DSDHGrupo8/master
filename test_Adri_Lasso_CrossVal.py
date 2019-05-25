@@ -1,12 +1,11 @@
 import pandas as pd
 from sklearn.linear_model import LassoCV
-from sklearn.datasets import make_regression
 from sklearn.linear_model import Lasso
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import r2_score
-import math
+
 #X, y = make_regression(noise=4, random_state=0)
 
 df=pd.read_csv("datasets\\properati_caballito.csv",encoding="utf8")
@@ -33,7 +32,7 @@ dummy_cols = [col for col in df if col.startswith('dummy_')]
 #cols=dummy_cols + ['surface_total_in_m2','price_aprox_usd']
 #cols=dummy_cols + ['surface_total_in_m2','price_usd_per_m2']
 #cols=dummy_cols
-cols=dummy_cols + ['lat','lon','surface_total_in_m2','distSubte','price_aprox_usd','expenses']
+cols=dummy_cols + ['lat','lon','surface_total_in_m2','distSubte','expenses']
 #cols=dummy_cols + ['lat','lon','surface_total_in_m2','distSubte']
 X_train=df_train[cols]
 y_train=df_train["precio_m2_usd"]
