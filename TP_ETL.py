@@ -237,7 +237,7 @@ class tp1_ETL:
         df_test.to_csv("properati_caballito_test.csv",encoding="utf8")
         self.df=self.df.iloc[:cant_regs_train,:]
 
-        self.df.to_csv("properati_caballito_train.csv",encoding='utf-8')
+        self.df.to_csv("csv\\properati_caballito_train.csv",encoding='utf-8')
         print("campos de salida:", self.df.columns)
         #uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})
         #uploaded.SetContentFile("Properati_fixed.csv")
