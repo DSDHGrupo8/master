@@ -24,7 +24,7 @@ class tp1_DS:
     
   def __init__(self):
     print("Version de SciKit:" ,sk.__version__)
-    self.df=pd.read_csv("properati_caballito_test.csv",encoding = 'utf8')
+    self.df=pd.read_csv("datasets\\properati_caballito.csv",encoding = 'utf8')
     #print(self.df.head(5))
    
     print("Dataset cargado . Cantidad de registros del dataset:", len(self.df))

@@ -9,7 +9,7 @@ from sklearn.metrics import r2_score
 import math
 #X, y = make_regression(noise=4, random_state=0)
 
-df=pd.read_csv("dataset.csv",encoding="utf8")
+df=pd.read_csv("datasets\\properati_caballito.csv",encoding="utf8")
 print("cant. registros antes de limpiar basura:", len(df))
 #LIMPIAR BASURA
 df=df[pd.to_numeric(df['dummy_property_type__store'], errors='coerce').notnull()]

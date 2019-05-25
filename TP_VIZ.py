@@ -20,7 +20,7 @@ class tp1_VIZ:
         print(g)
   
     def correlation_matrix(self):
-        self.df = pd.read_csv('Properati_CABA_DS_fixed.csv')
+        self.df = pd.read_csv('datasets\\Properati_CABA_DS_fixed.csv')
         #plt.rcParams.update({'font.size': 12})
         fig = plt.figure()
         fig.set_figheight(10)
@@ -88,7 +88,7 @@ x=tp1_VIZ()
 #x.correlation_matrix()
 #x.conteo_por_grupos()
 
-df2 = pd.read_csv('Properati_CABA_DS_fixed.csv')
+df2 = pd.read_csv('datasets\\Properati_CABA_DS_fixed.csv')
 cols = ['Unnamed: 0', 'Unnamed: 0.1']
 df2.drop(cols, axis=1, inplace=True)
 df2.loc[:,'property_type'].value_counts().to_frame()

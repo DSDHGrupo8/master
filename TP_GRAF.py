@@ -7,7 +7,7 @@ from matplotlib import cm as cm
 from sklearn import svm
 import seaborn as sns
 
-df = pd.read_csv('csv\\Properati_CABA_DS.csv')
+df = pd.read_csv('datasets\\Properati_CABA_DS.csv')
 cols = ['Unnamed: 0']
 df.drop(cols, axis=1, inplace=True)
 print(df.columns)

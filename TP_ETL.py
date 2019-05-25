@@ -62,8 +62,8 @@ class tp1_ETL:
         #downloaded.GetContentFile('precioxm2_pais.csv')
 
         self.df=pd.read_csv("C:\\Users\\Public\\properati.csv", encoding = 'utf8')
-        self.df_m2=pd.read_csv("precioxm2_pais.csv", encoding = 'utf8')
-        self.subte=pd.read_csv("estaciones-de-subte.csv", encoding = 'utf8')
+        self.df_m2=pd.read_csv("datasets\\precioxm2_pais.csv", encoding = 'utf8')
+        self.subte=pd.read_csv("datasets\\estaciones-de-subte.csv", encoding = 'utf8')
         self.subte=self.subte[['lon', 'lat']]
         print("DataSet registros:", len(self.df))
         print("DataSet Lookup Precio x m2:", len(self.df_m2))
@@ -88,6 +88,11 @@ class tp1_ETL:
         dummies_property=pd.get_dummies(self.df['property_type'],prefix='dummy_property_type_',drop_first=True)
         self.df=pd.concat([self.df,dummies_property],axis=1)
         #self.df=pd.concat([self.df,dummies_place],axis=1)
+        
+        #IMPUTAMOS EXPENSAS POR EL PROMEDIO
+        promedio_exp=round(self.df['expenses'].mean(),2)
+        print("promedio expensas:", promedio_exp)
+        self.df['expenses']=self.df['expenses'].fillna(promedio_exp)
         
 
         #CORRECCION DE M2 TOTALES
@@ -155,7 +160,7 @@ class tp1_ETL:
         
 
         #FILTRAR OUTLIERS
-        qryFiltro="(price_aprox_usd >= 10000 and price_aprox_usd <= 1000000)"
+        qryFiltro="(price_aprox_usd >= 10000 and price_aprox_usd <= 2000000)"
         qryFiltro+=" and (surface_total_in_m2 >= 20 and surface_total_in_m2 <= 1000)"
         qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
 
@@ -191,11 +196,13 @@ class tp1_ETL:
         auxval=0
         qryfiltro=""
 
+        rowcounter=0
+        
         for index, row in self.df.iterrows():
-
+          rowcounter+=1
           self.df.at[index,"distSubte"] = self.distanciaMinima(self.df.at[index,"lat"], self.df.at[index,"lon"])
 
-          if (math.fmod(index,1000)==0):print("Processing row:", index)
+          if (math.fmod(rowcounter,100)==0):print("Processing row:", rowcounter)
 
           if not (row.property_type is ''):
 
@@ -214,17 +221,34 @@ class tp1_ETL:
 
 
      
-        vcols=["pileta","balcon","patio","lavadero","cochera","luminoso","terraza","quincho",
-         "baulera","parrilla","premium","piscina","ascensor","profesional","alarma",
-         "amenities","calefaccion","pozo","gimnasio","aire acondicionado","spa","jacuzzi","cine"]
+        vcols=["acondicionado","amenities","alarma","ascensor","balcon","baulera","blindada","calefaccion",
+               "cancha","cine","cochera","contrafrente","crédito","electrógeno","estrenar","fitness","frente","frio-calor",
+               "guardacoche","gimnasio","jacuzzi","hidromasaje","hospital",
+               "jardin","lavarropas","lavadero","laundry","luminoso","living","metrobus","multisplit","parque",
+               "patio","parrilla","pentahome","pileta","premium","piscina","policlínico","profesional",
+               "quincho","refrigeración","residencial","reciclado","pozo","sauna",
+               "spa","split","solarium","sum","S.U.M","subte","suite","seguridad","terraza","vigilancia"]
+
+        #for x in vcols:
+        #    self.df["dummy_" + x]=self.df["title"].str.contains(x).astype(int)        
 
         for x in vcols:
             self.df["dummy_" + x]=self.df["description"].str.contains(x).astype(int)
+        
+            
 
         #LIMPIAR BASURA
         self.df=self.df[pd.to_numeric(self.df['dummy_property_type__store'], errors='coerce').notnull()]
         self.df=self.df[pd.to_numeric(self.df['dummy_property_type__apartment'], errors='coerce').notnull()]
         self.df=self.df[pd.to_numeric(self.df['dummy_property_type__house'], errors='coerce').notnull()]
+        self.df=self.df[pd.to_numeric(self.df['lat'], errors='coerce').notnull()]
+        self.df=self.df[pd.to_numeric(self.df['lon'], errors='coerce').notnull()]
+        self.df=self.df[pd.to_numeric(self.df['distSubte'], errors='coerce').notnull()]
+        
+
+
+        #Guardamos el dataset antes del recorte
+        self.df.to_csv("datasets\\properati_caballito.csv",encoding='utf-8')
         
         #HACEMOS EL recorte 20% test, 80% - DESACTIVADO
         cant_regs_total=len(self.df)
@@ -234,10 +258,10 @@ class tp1_ETL:
         df_test=self.df.iloc[cant_regs_train:cant_regs_total,:]
         print("df_test:" ,len(df_test))
         df_test["price_usd_per_m2"]=0
-        df_test.to_csv("properati_caballito_test.csv",encoding="utf8")
+        df_test.to_csv("datasets\\properati_caballito_test.csv",encoding="utf8")
         self.df=self.df.iloc[:cant_regs_train,:]
 
-        self.df.to_csv("csv\\properati_caballito_train.csv",encoding='utf-8')
+        self.df.to_csv("datasets\\properati_caballito_train.csv",encoding='utf-8')
         print("campos de salida:", self.df.columns)
         #uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})
         #uploaded.SetContentFile("Properati_fixed.csv")
