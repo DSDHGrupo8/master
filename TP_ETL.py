@@ -250,6 +250,11 @@ class tp1_ETL:
                     if (len(auxval)>=2):
                       self.df.at[index,"price_usd_per_m2"]=auxval[1]
 
+#        self.df.loc[:, 'distParque']=1/(self.df.loc[:, 'distParque'])
+#        self.df.loc[:, 'distSubte']=1/(self.df.loc[:, 'distSubte']/1000)
+#        self.df.loc[:, 'distEscuela']=(self.df.loc[:, 'distEscuela']/1000)
+#        self.df.loc[:, 'distHospital']=(self.df.loc[:, 'distHospital']/1000)
+
 
      
         vcols=["acondicionado","amenities","alarma","ascensor","balcon","baulera","blindada","calefaccion",
