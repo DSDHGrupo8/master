@@ -10,6 +10,10 @@ from sklearn.metrics import r2_score
 
 df=pd.read_csv("datasets\\properati_caballito.csv",encoding="utf8")
 print("cant. registros antes de limpiar basura:", len(df))
+
+scaler = StandardScaler()
+scaler.fit_transform(df[cols])
+
 #LIMPIAR BASURA
 df=df[pd.to_numeric(df['dummy_property_type__store'], errors='coerce').notnull()]
 df=df[pd.to_numeric(df['dummy_property_type__apartment'], errors='coerce').notnull()]
@@ -21,10 +25,6 @@ df=df[pd.to_numeric(df['distSubte'], errors='coerce').notnull()]
 regs_train=round((len(df)/100)*80,0)
 df_train=df.loc[:regs_train,:]
 df_test=df.loc[regs_train:len(df),:]
-
-promedio_exp=round(df['expenses'].mean(),2)
-print("promedio expensas:", promedio_exp)
-df['expenses']=df['expenses'].fillna(promedio_exp)
 
 print("cant. registros después de limpieza:", len(df))
 dummy_cols = [col for col in df if col.startswith('dummy_')]
@@ -42,9 +42,6 @@ X_test=df_test[cols]
 y_test=df_test["precio_m2_usd"]
 #print("X:",X)
 #print("y:",y)
-
-scaler = StandardScaler()
-scaler.fit_transform(df[cols])
 
 lasso = Lasso()
 print("cross_val_score para Lasso común:",round(max(cross_val_score(lasso, X_train, y_train, cv=5)),2))
