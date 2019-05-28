@@ -182,12 +182,7 @@ class tp1_ETL:
         self.df.loc[(self.df['price_usd_per_m2'].isnull()) & (self.df['price_aprox_usd'].notnull()) & (self.df['surface_total_in_m2'].notnull()), 'price_usd_per_m2'] = self.df.loc[:, 'price_aprox_usd']/self.df.loc[:, 'surface_total_in_m2']
        
 
-      
-
-        self.df=self.df.query(qryFiltro)
-
         self.df.drop(['surface_covered_in_m2', 'price_per_m2'], axis=1, inplace=True)
-
 
         #ARREGLAR DATOS CORREGIBLES
         #Arreglar precio x m2 en dólares
@@ -233,7 +228,7 @@ class tp1_ETL:
             self.df.at[index,"distHospital"] = min(self.hospitales_gdf.distance(aux))
             self.df.at[index,"distParque"] = self.distanciaMinimaParque(self.df.at[index,"lat"], self.df.at[index,"lon"])
 
-            if not (row.property_type is ''):
+            if not (row.property_type == ''):
             
                 if (self.df.at[index,"price_usd_per_m2"] == 0):
                     qryfiltro="place_name=='" + row.place_name + "'"
@@ -247,13 +242,6 @@ class tp1_ETL:
                     if (len(auxval)>=2):
                       self.df.at[index,"price_usd_per_m2"]=auxval[1]
 
-#        self.df.loc[:, 'distParque']=1/(self.df.loc[:, 'distParque'])
-#        self.df.loc[:, 'distSubte']=1/(self.df.loc[:, 'distSubte']/1000)
-#        self.df.loc[:, 'distEscuela']=(self.df.loc[:, 'distEscuela']/1000)
-#        self.df.loc[:, 'distHospital']=(self.df.loc[:, 'distHospital']/1000)
-
-
-     
         vcols=["acondicionado","amenities","alarma","ascensor","balcon","baulera","blindada","calefaccion",
                "cancha","cine","cochera","contrafrente","crédito","electrógeno","estrenar","fitness","frente","frio-calor",
                "guardacoche","gimnasio","jacuzzi","hidromasaje","hospital",
@@ -268,12 +256,14 @@ class tp1_ETL:
         for x in vcols:
             self.df["dummy_" + x]=self.df["description"].str.contains(x).astype(int)
 
-	#FILTRAR OUTLIERS
-        qryFiltro="(price_aprox_usd >= 10000 and price_aprox_usd <= 2000000)"
+        #FILTRAR OUTLIERS
+        qryFiltro="(price_aprox_usd >= 10000 and price_aprox_usd <= 1000000)"
         qryFiltro+=" and (surface_total_in_m2 >= 20 and surface_total_in_m2 <= 1000)"
-        qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
-	qryFiltro+=" and (precio_m2_usd <= 7000 and precio_m2_usd >= 1000)"
-	qryFiltro+=" and (price_usd_per_m2 <= 7000 and price_usd_per_m2 >= 1000)"
+        #qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
+        qryFiltro+=" and (precio_m2_usd <= 7000 and precio_m2_usd >= 1000)"
+        qryFiltro+=" and (price_usd_per_m2 <= 7000 and price_usd_per_m2 >= 1000)"
+        
+        self.df=self.df.query(qryFiltro)
 
         #LIMPIAR BASURA
         self.df=self.df[pd.to_numeric(self.df['dummy_property_type__store'], errors='coerce').notnull()]
@@ -295,7 +285,7 @@ class tp1_ETL:
         print("cant. regs. train:", cant_regs_train)
         df_test=self.df.iloc[cant_regs_train:cant_regs_total,:]
         print("df_test:" ,len(df_test))
-        df_test["price_usd_per_m2"]=0
+        #df_test["price_usd_per_m2"]=0
         df_test.to_csv("datasets\\properati_caballito_test.csv",encoding="utf8")
         self.df=self.df.iloc[:cant_regs_train,:]
 
