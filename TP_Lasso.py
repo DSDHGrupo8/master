@@ -14,14 +14,6 @@ print("cant. registros antes de limpiar basura:", len(df))
 scaler = StandardScaler()
 scaler.fit_transform(df[cols])
 
-#LIMPIAR BASURA
-df=df[pd.to_numeric(df['dummy_property_type__store'], errors='coerce').notnull()]
-df=df[pd.to_numeric(df['dummy_property_type__apartment'], errors='coerce').notnull()]
-df=df[pd.to_numeric(df['dummy_property_type__house'], errors='coerce').notnull()]
-df=df[pd.to_numeric(df['lat'], errors='coerce').notnull()]
-df=df[pd.to_numeric(df['lon'], errors='coerce').notnull()]
-df=df[pd.to_numeric(df['distSubte'], errors='coerce').notnull()]
-
 regs_train=round((len(df)/100)*80,0)
 df_train=df.loc[:regs_train,:]
 df_test=df.loc[regs_train:len(df),:]
@@ -36,6 +28,8 @@ distance_cols = [col for col in df if col.startswith('dist')]
 cols=dummy_cols + distance_cols + ['lat','lon','surface_total_in_m2','expenses']
 #cols=dummy_cols + distance_cols + ['lat','lon','surface_total_in_m2','expenses','price_aprox_usd']
 #cols=dummy_cols + ['lat','lon','surface_total_in_m2','distSubte']
+x=df[cols]
+y=df["precio_m2_usd"]
 X_train=df_train[cols]
 y_train=df_train["precio_m2_usd"]
 X_test=df_test[cols]
@@ -55,13 +49,13 @@ print("LassoCV r2:" ,round(reg.score(X_train, y_train),2))
 #print("predict:", reg.predict(X[:1,]))
 
 polynomial_features= PolynomialFeatures(degree=2)
-x_poly = polynomial_features.fit_transform(x_train)
+x_poly = polynomial_features.fit_transform(x)
 
 model = LinearRegression()
-model.fit(x_poly, y_train)
+model.fit(x_poly, y)
 y_poly_pred = model.predict(x_poly)
 
 rmse = np.sqrt(mean_squared_error(y,y_poly_pred))
 r2 = r2_score(y,y_poly_pred)
-print("rmse poly:", rmse)
-print("r2 poly:",r2)
+print("Poly rmse:",rmse)
+print("Poly r2:",r2)
