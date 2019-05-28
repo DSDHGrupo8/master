@@ -182,10 +182,7 @@ class tp1_ETL:
         self.df.loc[(self.df['price_usd_per_m2'].isnull()) & (self.df['price_aprox_usd'].notnull()) & (self.df['surface_total_in_m2'].notnull()), 'price_usd_per_m2'] = self.df.loc[:, 'price_aprox_usd']/self.df.loc[:, 'surface_total_in_m2']
        
 
-        #FILTRAR OUTLIERS
-        qryFiltro="(price_aprox_usd >= 10000 and price_aprox_usd <= 2000000)"
-        qryFiltro+=" and (surface_total_in_m2 >= 20 and surface_total_in_m2 <= 1000)"
-        qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
+      
 
         self.df=self.df.query(qryFiltro)
 
@@ -270,6 +267,13 @@ class tp1_ETL:
 
         for x in vcols:
             self.df["dummy_" + x]=self.df["description"].str.contains(x).astype(int)
+
+	#FILTRAR OUTLIERS
+        qryFiltro="(price_aprox_usd >= 10000 and price_aprox_usd <= 2000000)"
+        qryFiltro+=" and (surface_total_in_m2 >= 20 and surface_total_in_m2 <= 1000)"
+        qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
+	qryFiltro+=" and (precio_m2_usd <= 10000) and (precio_m2_usd >= 1000)"
+	qryFiltro+=" and (price_usd_per_m2 <= 10000) and (price_usd_per_m2 >= 1000)"
 
         #LIMPIAR BASURA
         self.df=self.df[pd.to_numeric(self.df['dummy_property_type__store'], errors='coerce').notnull()]
