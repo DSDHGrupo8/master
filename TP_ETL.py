@@ -272,8 +272,8 @@ class tp1_ETL:
         qryFiltro="(price_aprox_usd >= 10000 and price_aprox_usd <= 2000000)"
         qryFiltro+=" and (surface_total_in_m2 >= 20 and surface_total_in_m2 <= 1000)"
         qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
-	qryFiltro+=" and (precio_m2_usd <= 5000 and precio_m2_usd >= 1000)"
-	qryFiltro+=" and (price_usd_per_m2 <= 5000 and price_usd_per_m2 >= 1000)"
+	qryFiltro+=" and (precio_m2_usd <= 6000 and precio_m2_usd >= 1000)"
+	qryFiltro+=" and (price_usd_per_m2 <= 6000 and price_usd_per_m2 >= 1000)"
 
         #LIMPIAR BASURA
         self.df=self.df[pd.to_numeric(self.df['dummy_property_type__store'], errors='coerce').notnull()]
