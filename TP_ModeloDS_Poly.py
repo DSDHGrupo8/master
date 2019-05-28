@@ -16,9 +16,7 @@ regs_train=round((len(df)/100)*80,0)
 df_train=df.loc[:regs_train,:]
 df_test=df.loc[regs_train:len(df),:]
 
-print("cant. registros después de limpieza:", len(df))
 dummy_cols = [col for col in df if col.startswith('dummy_')]
-#print("dummy columns:" , dummy_cols)
 distance_cols = [col for col in df if col.startswith('dist')]
 cols=dummy_cols + distance_cols + ['lat','lon','surface_total_in_m2','expenses']
 x=df[cols]
