@@ -83,6 +83,8 @@ class tp1_ETL:
        
         print("DataSet registros:", len(self.df))
         print("DataSet Lookup Precio x m2:", len(self.df_m2))
+        
+       
 
         valor_Dolar=17.8305
        
@@ -102,7 +104,8 @@ class tp1_ETL:
         
         self.df.drop('state_name', axis=1, inplace=True)
         print("cantidad de registros:", len(self.df))
-     
+        
+  
        
         #dummificar las variables place_name y property_type
         #dummies_place=pd.get_dummies(self.df['place_name'],prefix='dummy_place_',drop_first=True)
@@ -115,6 +118,13 @@ class tp1_ETL:
         promedio_exp=round(self.df['expenses'].mean(),2)
         print("promedio expensas:", promedio_exp)
         self.df['expenses']=self.df['expenses'].fillna(promedio_exp)
+        
+        #ARREGLAR LATITUD Y LONGITUD A PARTIR DE LA COLUMNA LAT-LON
+        latlongdf=self.df['lat-lon'].str.split(",",expand=True)
+        self.df['lat']=latlongdf.loc[:,0]
+        self.df['lon']=latlongdf.loc[:,1]
+        self.df.drop('lat-lon',axis=1,inplace=True)
+
 	
        
 
@@ -179,35 +189,14 @@ class tp1_ETL:
         #COMPLETAR REGISTROS DESPUES DE LLENAR CON REGEX
         self.df.dropna(subset=['surface_total_in_m2', 'surface_covered_in_m2'], how='all', inplace=True)
         self.df.loc[(self.df['surface_total_in_m2'].isnull()) & (self.df['surface_covered_in_m2'].notnull()), 'surface_total_in_m2'] = self.df.loc[:, 'surface_covered_in_m2']
-        self.df.loc[(self.df['price_usd_per_m2'].isnull()) & (self.df['price_aprox_usd'].notnull()) & (self.df['surface_total_in_m2'].notnull()), 'price_usd_per_m2'] = self.df.loc[:, 'price_aprox_usd']/self.df.loc[:, 'surface_total_in_m2']
-       
-
-        self.df.drop(['surface_covered_in_m2', 'price_per_m2'], axis=1, inplace=True)
-
+        
         #ARREGLAR DATOS CORREGIBLES
         #Arreglar precio x m2 en dólares
         self.df['price_aprox_usd']=np.round(self.df['price_aprox_usd'],0).fillna(0).astype(np.int64)
         self.df['surface_total_in_m2']=np.round(self.df['surface_total_in_m2'],0).astype(np.int64)
-        self.df['precio_m2_usd']=np.round(self.df['price_aprox_usd'] / self.df['surface_total_in_m2'],0)
 
-
-        #ARREGLAR LATITUD Y LONGITUD A PARTIR DE LA COLUMNA LAT-LON
-        latlongdf=self.df['lat-lon'].str.split(",",expand=True)
-        self.df['lat']=latlongdf.loc[:,0]
-        self.df['lon']=latlongdf.loc[:,1]
-        self.df.drop('lat-lon',axis=1,inplace=True)
-        #self.df.drop('price_per_m2',axis=1,inplace=True)
-
-        #Convertir campos categoricos a valores enteros
-        dfPlaces=pd.DataFrame(self.df["place_name"].unique(),columns=['name'])
-        dfPlaces["ID"]=list(range(len(dfPlaces)))
-        dfPropertyTypes=pd.DataFrame(self.df["property_type"].unique(),columns=['name'])
-        dfPropertyTypes["ID"]=list(range(len(dfPropertyTypes)))
-
-        #print(dfStates)
-        #print(dfPlaces)
-        #print(dfPropertyTypes)
-
+        
+     
         auxval=0
         qryfiltro=""
         rowcounter=0	
@@ -228,6 +217,51 @@ class tp1_ETL:
             self.df.at[index,"distHospital"] = min(self.hospitales_gdf.distance(aux))
             self.df.at[index,"distParque"] = self.distanciaMinimaParque(self.df.at[index,"lat"], self.df.at[index,"lon"])
 
+            
+
+        vcols=["acondicionado","amenities","alarma","ascensor","balcon","baulera","blindada","calefaccion",
+               "cancha","cine","cochera","contrafrente","crédito","electrógeno","estrenar","fitness","frente","frio-calor",
+               "guardacoche","gimnasio","jacuzzi","hidromasaje","hospital",
+               "jardin","lavarropas","lavadero","laundry","luminoso","living","metrobus","multisplit","parque",
+               "patio","parrilla","pentahome","pileta","premium","piscina","policlínico","profesional",
+               "quincho","refrigeración","residencial","reciclado","pozo","sauna",
+               "spa","split","solarium","sum","S.U.M","subte","suite","seguridad","terraza","vigilancia"]
+
+        for x in vcols:
+            self.df["dummy_" + x]=self.df["description"].str.contains(x).astype(int)
+            
+    
+        #HACEMOS EL recorte 20% test, 80% - DESACTIVADO
+        cant_regs_total=len(self.df)
+        cant_regs_train=math.trunc((cant_regs_total/100)*80)
+        print("cant. regs. totales:", cant_regs_total)
+        print("cant. regs. train:", cant_regs_train)
+        df_test=self.df.iloc[cant_regs_train:cant_regs_total,:]
+        df_test['precio_m2_usd']=df_test['price_usd_per_m2']
+        print("df_test:" ,len(df_test))
+     
+        self.df.loc[(self.df['price_usd_per_m2'].isnull()) & (self.df['price_aprox_usd'].notnull()) & (self.df['surface_total_in_m2'].notnull()), 'price_usd_per_m2'] = self.df.loc[:, 'price_aprox_usd']/self.df.loc[:, 'surface_total_in_m2']
+        self.df.drop(['surface_covered_in_m2', 'price_per_m2'], axis=1, inplace=True)
+        self.df['precio_m2_usd']=np.round(self.df['price_aprox_usd'] / self.df['surface_total_in_m2'],0)
+
+
+        #LIMPIAR BASURA
+        self.df=self.df[pd.to_numeric(self.df['dummy_property_type__store'], errors='coerce').notnull()]
+        self.df=self.df[pd.to_numeric(self.df['dummy_property_type__apartment'], errors='coerce').notnull()]
+        self.df=self.df[pd.to_numeric(self.df['dummy_property_type__house'], errors='coerce').notnull()]
+        self.df=self.df[pd.to_numeric(self.df['lat'], errors='coerce').notnull()]
+        self.df=self.df[pd.to_numeric(self.df['lon'], errors='coerce').notnull()]
+        self.df=self.df[pd.to_numeric(self.df['distSubte'], errors='coerce').notnull()]
+
+        #Guardamos el dataset antes del recorte
+        self.df.to_csv("datasets\\properati_caballito.csv",encoding='utf-8')		
+       
+       
+        #df_test["price_usd_per_m2"]=0
+        
+        self.df=self.df.iloc[:cant_regs_train,:]
+        
+        for index, row in self.df.iterrows():
             if not (row.property_type == ''):
             
                 if (self.df.at[index,"price_usd_per_m2"] == 0):
@@ -241,54 +275,18 @@ class tp1_ETL:
             
                     if (len(auxval)>=2):
                       self.df.at[index,"price_usd_per_m2"]=auxval[1]
-
-        vcols=["acondicionado","amenities","alarma","ascensor","balcon","baulera","blindada","calefaccion",
-               "cancha","cine","cochera","contrafrente","crédito","electrógeno","estrenar","fitness","frente","frio-calor",
-               "guardacoche","gimnasio","jacuzzi","hidromasaje","hospital",
-               "jardin","lavarropas","lavadero","laundry","luminoso","living","metrobus","multisplit","parque",
-               "patio","parrilla","pentahome","pileta","premium","piscina","policlínico","profesional",
-               "quincho","refrigeración","residencial","reciclado","pozo","sauna",
-               "spa","split","solarium","sum","S.U.M","subte","suite","seguridad","terraza","vigilancia"]
-
-        #for x in vcols:
-        #    self.df["dummy_" + x]=self.df["title"].str.contains(x).astype(int)
-
-        for x in vcols:
-            self.df["dummy_" + x]=self.df["description"].str.contains(x).astype(int)
+        
 
         #FILTRAR OUTLIERS
-        qryFiltro="(price_aprox_usd >= 10000 and price_aprox_usd <= 1000000)"
-        qryFiltro+=" and (surface_total_in_m2 >= 20 and surface_total_in_m2 <= 1000)"
+        qryFiltro="(price_aprox_usd >= 50000 and price_aprox_usd <= 200000)"
+        qryFiltro+=" and (surface_total_in_m2 >= 35 and surface_total_in_m2 <= 90)"
         #qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
-        qryFiltro+=" and (precio_m2_usd <= 7000 and precio_m2_usd >= 1000)"
-        qryFiltro+=" and (price_usd_per_m2 <= 7000 and price_usd_per_m2 >= 1000)"
+        qryFiltro+=" and (precio_m2_usd <= 2800 and precio_m2_usd >= 2000)"
+        qryFiltro+=" and (price_usd_per_m2 <= 2800 and price_usd_per_m2 >= 2000)"
         
         self.df=self.df.query(qryFiltro)
-
-        #LIMPIAR BASURA
-        self.df=self.df[pd.to_numeric(self.df['dummy_property_type__store'], errors='coerce').notnull()]
-        self.df=self.df[pd.to_numeric(self.df['dummy_property_type__apartment'], errors='coerce').notnull()]
-        self.df=self.df[pd.to_numeric(self.df['dummy_property_type__house'], errors='coerce').notnull()]
-        self.df=self.df[pd.to_numeric(self.df['lat'], errors='coerce').notnull()]
-        self.df=self.df[pd.to_numeric(self.df['lon'], errors='coerce').notnull()]
-        self.df=self.df[pd.to_numeric(self.df['distSubte'], errors='coerce').notnull()]
-
-
-
-        #Guardamos el dataset antes del recorte
-        self.df.to_csv("datasets\\properati_caballito.csv",encoding='utf-8')		
-       
-        #HACEMOS EL recorte 20% test, 80% - DESACTIVADO
-        cant_regs_total=len(self.df)
-        print("cant. regs. totales:", cant_regs_total)
-        cant_regs_train=math.trunc((cant_regs_total/100)*80)
-        print("cant. regs. train:", cant_regs_train)
-        df_test=self.df.iloc[cant_regs_train:cant_regs_total,:]
-        print("df_test:" ,len(df_test))
-        #df_test["price_usd_per_m2"]=0
+        df_test=df_test.query(qryFiltro)
         df_test.to_csv("datasets\\properati_caballito_test.csv",encoding="utf8")
-        self.df=self.df.iloc[:cant_regs_train,:]
-
         self.df.to_csv("datasets\\properati_caballito_train.csv",encoding='utf-8')
         print("campos de salida:", self.df.columns)
         #uploaded = drive.CreateFile({'Properati_fixed': 'Properati_fixed.csv'})

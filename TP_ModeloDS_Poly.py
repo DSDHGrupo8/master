@@ -1,11 +1,9 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import mean_squared_error
-from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import Normalizer
 import matplotlib.pyplot as plt
 import operator
@@ -21,9 +19,9 @@ df_test=pd.read_csv("datasets\\properati_caballito_test.csv",encoding="utf8")
 
 #FILTRAR OUTLIERS
 qryFiltro="(price_aprox_usd >= 50000 and price_aprox_usd <= 250000)"
-qryFiltro+=" and (surface_total_in_m2 >= 30 and surface_total_in_m2 <= 100)"
+qryFiltro+=" and (surface_total_in_m2 >= 30 and surface_total_in_m2 <= 90)"
 #qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
-qryFiltro+=" and (precio_m2_usd <= 3750 and precio_m2_usd >= 2000)"
+#qryFiltro+=" and (precio_m2_usd <= 3750 and precio_m2_usd >= 2000)"
 qryFiltro+=" and (price_usd_per_m2 <= 3750 and price_usd_per_m2 >= 2000)"
 
 df_train=df_train.query(qryFiltro)
@@ -36,9 +34,9 @@ dummy_cols=["dummy_property_type__apartment","dummy_property_type__house"]
 distance_cols = [col for col in df_train if col.startswith('dist')]
 cols=dummy_cols + distance_cols + ['surface_total_in_m2','expenses']
 #
-scaler = Normalizer()
-df_train[cols]=scaler.fit_transform(df_train[cols])
-df_test[cols]=scaler.fit_transform(df_test[cols])
+#scaler = Normalizer()
+#df_train[cols]=scaler.fit_transform(df_train[cols])
+#df_test[cols]=scaler.fit_transform(df_test[cols])
 
 #x=df[cols]
 #y=df["price_usd_per_m2"]

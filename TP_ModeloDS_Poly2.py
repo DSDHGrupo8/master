@@ -1,11 +1,9 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import mean_squared_error
-from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import Normalizer
 import matplotlib.pyplot as plt
 import CarlosLib
@@ -21,25 +19,24 @@ df_train=pd.read_csv("datasets\\properati_caballito_train.csv",encoding="utf8")
 df_test=pd.read_csv("datasets\\properati_caballito_test.csv",encoding="utf8")
 
 #FILTRAR OUTLIERS
-qryFiltro="(price_aprox_usd >= 50000 and price_aprox_usd <= 250000)"
-qryFiltro+=" and (surface_total_in_m2 >= 30 and surface_total_in_m2 <= 120)"
+qryFiltro="(price_aprox_usd >= 50000 and price_aprox_usd <= 200000)"
+qryFiltro+=" and (surface_total_in_m2 >= 35 and surface_total_in_m2 <= 90)"
 #qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
-qryFiltro+=" and (precio_m2_usd <= 4000 and precio_m2_usd >= 2000)"
-qryFiltro+=" and (price_usd_per_m2 <= 4000 and price_usd_per_m2 >= 2000)"
+qryFiltro+=" and (precio_m2_usd <= 5000 and precio_m2_usd >= 2000)"
+qryFiltro+=" and (price_usd_per_m2 <= 5000 and price_usd_per_m2 >= 2000)"
 
 df_train=df_train.query(qryFiltro)
 df_test=df_test.query(qryFiltro)
 
-print(df_train.describe())
-print(df_test.describe())
+#print(df_train.describe())
+#print(df_test.describe())
 
-#dummy_cols = [col for col in df_train if col.startswith('dummy_')]
-dummy_cols=["dummy_property_type__apartment","dummy_property_type__house","dummy_amenities"
-            ,"dummy_parrilla"]
+dummy_cols = [col for col in df_train if col.startswith('dummy_')]
+#dummy_cols=["dummy_property_type__apartment","dummy_property_type__house","dummy_parrilla"]
 #dummy_cols=[]
 distance_cols = [col for col in df_train if col.startswith('dist')]
 cols=dummy_cols + distance_cols + ['surface_total_in_m2','expenses']
-#
+
 #scaler = Normalizer()
 #df_train[cols]=scaler.fit_transform(df_train[cols])
 #df_test[cols]=scaler.fit_transform(df_test[cols])
