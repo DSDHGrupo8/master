@@ -53,3 +53,15 @@ reg = LassoCV(n_alphas=100, random_state=0,cv=kf, normalize=False).fit(X_train, 
 y_test=reg.predict(X_test)
 print("LassoCV r2:" ,round(reg.score(X_train, y_train),2)) 
 #print("predict:", reg.predict(X[:1,]))
+
+polynomial_features= PolynomialFeatures(degree=2)
+x_poly = polynomial_features.fit_transform(x_train)
+
+model = LinearRegression()
+model.fit(x_poly, y_train)
+y_poly_pred = model.predict(x_poly)
+
+rmse = np.sqrt(mean_squared_error(y,y_poly_pred))
+r2 = r2_score(y,y_poly_pred)
+print("rmse poly:", rmse)
+print("r2 poly:",r2)
