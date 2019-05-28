@@ -58,3 +58,10 @@ print("The model performance for the training set")
 print("-------------------------------------------")
 print("RMSE of training set is {}".format(rmse_train))
 print("R2 score of training set is {}".format(r2_train))
+
+print("\n")
+
+print("The model performance for the test set")
+print("-------------------------------------------")
+print("RMSE of test set is {}".format(rmse_test))
+print("R2 score of test set is {}".format(r2_test))
