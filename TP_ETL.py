@@ -89,7 +89,7 @@ class tp1_ETL:
         valor_Dolar=17.8305
        
         #DROPEAMOS VARIABLES NO INTERESANTES
-        cols=['price', 'currency', 'country_name', 'price_aprox_local_currency','operation','properati_url','place_with_parent_names','image_thumbnail','floor','rooms','geonames_id']
+        cols=['price', 'currency', 'country_name', 'price_aprox_local_currency','operation','properati_url','place_with_parent_names','image_thumbnail','rooms','geonames_id']
         #cols=['price', 'currency', 'price_aprox_local_currency']
         self.df.drop(cols, axis=1, inplace=True)
 
@@ -104,8 +104,6 @@ class tp1_ETL:
         
         self.df.drop('state_name', axis=1, inplace=True)
         print("cantidad de registros:", len(self.df))
-        
-  
        
         #dummificar las variables place_name y property_type
         #dummies_place=pd.get_dummies(self.df['place_name'],prefix='dummy_place_',drop_first=True)
@@ -124,9 +122,6 @@ class tp1_ETL:
         self.df['lat']=latlongdf.loc[:,0]
         self.df['lon']=latlongdf.loc[:,1]
         self.df.drop('lat-lon',axis=1,inplace=True)
-
-	
-       
 
         #CORRECCION DE M2 TOTALES
         df1 = self.df[self.df['surface_total_in_m2'].isnull()]
@@ -231,7 +226,7 @@ class tp1_ETL:
             self.df["dummy_" + x]=self.df["description"].str.contains(x).astype(int)
             
     
-        #HACEMOS EL recorte 20% test, 80% - DESACTIVADO
+        #HACEMOS EL RECORTE
         cant_regs_total=len(self.df)
         cant_regs_train=math.trunc((cant_regs_total/100)*80)
         print("cant. regs. totales:", cant_regs_total)
@@ -278,14 +273,20 @@ class tp1_ETL:
         
 
         #FILTRAR OUTLIERS
-        qryFiltro="(price_aprox_usd >= 50000 and price_aprox_usd <= 200000)"
-        qryFiltro+=" and (surface_total_in_m2 >= 35 and surface_total_in_m2 <= 90)"
+        qryFiltro="(price_aprox_usd >= 50000 and price_aprox_usd <= 500000)"
+        qryFiltro+=" and (surface_total_in_m2 >= 35 and surface_total_in_m2 <= 500)"
         #qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
-        qryFiltro+=" and (precio_m2_usd <= 2800 and precio_m2_usd >= 2000)"
-        qryFiltro+=" and (price_usd_per_m2 <= 2800 and price_usd_per_m2 >= 2000)"
+        qryFiltro+=" and (precio_m2_usd <= 7000 and precio_m2_usd >= 2000)"
+        qryFiltro+=" and (price_usd_per_m2 <= 7000 and price_usd_per_m2 >= 2000)"
         
         self.df=self.df.query(qryFiltro)
         df_test=df_test.query(qryFiltro)
+        
+        
+        self.df["rooms"]=round(self.df['surface_total_in_m2'] / 10,0)
+        df_test["rooms"]=round(df_test['surface_total_in_m2'] / 10,0)
+        
+
         df_test.to_csv("datasets\\properati_caballito_test.csv",encoding="utf8")
         self.df.to_csv("datasets\\properati_caballito_train.csv",encoding='utf-8')
         print("campos de salida:", self.df.columns)

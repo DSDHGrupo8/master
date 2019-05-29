@@ -18,25 +18,56 @@ df_train=pd.read_csv("datasets\\properati_caballito_train.csv",encoding="utf8")
 df_test=pd.read_csv("datasets\\properati_caballito_test.csv",encoding="utf8")
 
 #FILTRAR OUTLIERS
-qryFiltro="(price_aprox_usd >= 50000 and price_aprox_usd <= 250000)"
-qryFiltro+=" and (surface_total_in_m2 >= 30 and surface_total_in_m2 <= 90)"
+qryFiltro="(price_aprox_usd >= 50000 and price_aprox_usd <= 500000)"
+qryFiltro+=" and (surface_total_in_m2 >= 25 and surface_total_in_m2 <= 120)"
 #qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
 #qryFiltro+=" and (precio_m2_usd <= 3750 and precio_m2_usd >= 2000)"
-qryFiltro+=" and (price_usd_per_m2 <= 3750 and price_usd_per_m2 >= 2000)"
+qryFiltro+=" and (price_usd_per_m2 <= 7000 and price_usd_per_m2 >= 2200)"
 
 df_train=df_train.query(qryFiltro)
 df_test=df_test.query(qryFiltro)
 
+df_train['lat']=(-1 * df_train['lat'])/10
+df_train['lon']=(-1 * df_train['lon'])/10
+
+df_test['lat']=(-1 * df_test['lat'])/10
+df_test['lon']=(-1 * df_test['lon'])/10
+
+#distSubte
+#distEscuela
+#distHospital
+#distParque
+#df_train['distSubte']=(df_test['distSubte']/10)
+#df_train['distEscuela']=(df_test['distEscuela']/10)
+#df_train['distHospital']=(df_test['distHospital']/10)
+#df_train['distParque']=(df_test['distParque']/10)
+#
+##
+#df_test['distSubte']=(df_test['distSubte']/10)
+#df_test['distEscuela']=(df_test['distEscuela']/10)
+#df_test['distHospital']=(df_test['distHospital']/10)
+#df_test['distParque']=(df_test['distParque']/10)
+#df_train.dropna()
+#df_test.dropna()
+
 
 #dummy_cols = [col for col in df_train if col.startswith('dummy_')]
-dummy_cols=["dummy_property_type__apartment","dummy_property_type__house"]
+dummy_cols=["dummy_property_type__apartment"]
+dummy_cols2=["dummy_frente","dummy_profesional","dummy_parrilla","dummy_solarium"]
+dummy_cols3=["dummy_living","dummy_luminoso","dummy_terraza","dummy_laundry","dummy_cochera",
+             "dummy_split","dummy_piscina","dummy_spa","dummy_acondicionado",
+             "dummy_subte","dummy_pozo","dummy_balcon","dummy_sum","dummy_vigilancia"]
+#dummy_cols2=[]
 #dummy_cols=[]
+#dummy_cols3=[]
 distance_cols = [col for col in df_train if col.startswith('dist')]
-cols=dummy_cols + distance_cols + ['surface_total_in_m2','expenses']
+cols=dummy_cols + dummy_cols2 + dummy_cols3 + distance_cols + ['lat','lon','surface_total_in_m2','expenses']
 #
-#scaler = Normalizer()
-#df_train[cols]=scaler.fit_transform(df_train[cols])
-#df_test[cols]=scaler.fit_transform(df_test[cols])
+scaler = Normalizer()
+scalercols=cols + ["price_usd_per_m2"]
+df_train[scalercols]=scaler.fit_transform(df_train[scalercols])
+df_test[scalercols]=scaler.fit_transform(df_test[scalercols])
+
 
 #x=df[cols]
 #y=df["price_usd_per_m2"]
@@ -47,7 +78,7 @@ y_test=df_test["price_usd_per_m2"]
 #print("X:",X)
 #print("y:",y)
 
-degree=2
+degree=1
 poly_features = PolynomialFeatures(degree=degree)
 
 # transforms the existing features to higher degree features.
@@ -97,7 +128,7 @@ print("R2 score of test set is {}".format(r2_test))
 
 x=X_train["surface_total_in_m2"]
 y=y_train
-plt.title("Trained")
+plt.title("Trained R2 (surface vs pricem2):" + str(r2_train))
 plt.scatter(x, y, s=20)
 # sort the values of x before line plot
 sort_axis = operator.itemgetter(0)
@@ -108,7 +139,7 @@ plt.show()
 
 x=X_test["surface_total_in_m2"]
 y=y_test
-plt.title("Predicted")
+plt.title("Predicted R2 (surface vs pricem2):" + str(r2_test))
 plt.scatter(x, y, s=20)
 # sort the values of x before line plot
 sort_axis = operator.itemgetter(0)
@@ -117,4 +148,3 @@ x, y_poly_pred = zip(*sorted_zip)
 plt.plot(x, y_poly_pred, color='m')
 plt.show()
 
-print("y_test.min:",min(y_test))

@@ -19,11 +19,12 @@ df_train=pd.read_csv("datasets\\properati_caballito_train.csv",encoding="utf8")
 df_test=pd.read_csv("datasets\\properati_caballito_test.csv",encoding="utf8")
 
 #FILTRAR OUTLIERS
-qryFiltro="(price_aprox_usd >= 50000 and price_aprox_usd <= 200000)"
-qryFiltro+=" and (surface_total_in_m2 >= 35 and surface_total_in_m2 <= 90)"
+qryFiltro="(price_aprox_usd >= 50000 and price_aprox_usd <= 250000)"
+qryFiltro+=" and (surface_total_in_m2 >= 25 and surface_total_in_m2 <= 120)"
 #qryFiltro+=" and (surface_total_in_m2 >= surface_covered_in_m2)"
-qryFiltro+=" and (precio_m2_usd <= 5000 and precio_m2_usd >= 2000)"
-qryFiltro+=" and (price_usd_per_m2 <= 5000 and price_usd_per_m2 >= 2000)"
+#qryFiltro+=" and (precio_m2_usd <= 3750 and precio_m2_usd >= 2000)"
+qryFiltro+=" and (price_usd_per_m2 <= 7000 and price_usd_per_m2 >= 2000)"
+
 
 df_train=df_train.query(qryFiltro)
 df_test=df_test.query(qryFiltro)
@@ -31,18 +32,24 @@ df_test=df_test.query(qryFiltro)
 #print(df_train.describe())
 #print(df_test.describe())
 
-dummy_cols = [col for col in df_train if col.startswith('dummy_')]
-#dummy_cols=["dummy_property_type__apartment","dummy_property_type__house","dummy_parrilla"]
-#dummy_cols=[]
+#dummy_cols = [col for col in df_train if col.startswith('dummy_')]
+dummy_cols=["dummy_property_type__apartment"]
+dummy_cols2=["dummy_frente","dummy_profesional","dummy_parrilla","dummy_solarium"]
+dummy_cols3=["dummy_living","dummy_luminoso","dummy_terraza","dummy_laundry","dummy_cochera",
+             "dummy_split","dummy_piscina","dummy_spa","dummy_acondicionado",
+             "dummy_subte","dummy_pozo","dummy_balcon","dummy_sum","dummy_vigilancia"]
+#dummy_cols2=[]
+#dummy_cols3=[]
 distance_cols = [col for col in df_train if col.startswith('dist')]
-cols=dummy_cols + distance_cols + ['surface_total_in_m2','expenses']
+#distance_cols=[]
 
-#scaler = Normalizer()
-#df_train[cols]=scaler.fit_transform(df_train[cols])
-#df_test[cols]=scaler.fit_transform(df_test[cols])
+cols=dummy_cols + dummy_cols2 + dummy_cols3 + distance_cols + ['surface_total_in_m2','expenses','rooms']
+#
+scaler = Normalizer()
+scalercols=cols + ["price_usd_per_m2"]
+df_train[scalercols]=scaler.fit_transform(df_train[scalercols])
+df_test[scalercols]=scaler.fit_transform(df_test[scalercols])
 
-x=df[cols]
-y=df["price_usd_per_m2"]
 X_train=df_train[cols]
 y_train=df_train["price_usd_per_m2"]
 X_test=df_test[cols]
@@ -62,7 +69,7 @@ dict_train=X_train.T.to_dict()
 #print(dict_train.values())
 
 X_train_v=v.fit_transform(dict_train.values())
-#print("v_train feature names:",v.get_feature_names())
+print("v_train feature names:",v.get_feature_names())
 ##print(X_train_v)
 ##
 poly_features = PolynomialFeatures(degree=1)
