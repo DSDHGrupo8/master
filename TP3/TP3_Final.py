@@ -5,6 +5,7 @@ Created on Sat Jun 22 13:36:44 2019
 @author: Adrian
 """
 
+import math
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -18,6 +19,7 @@ from sklearn.metrics import confusion_matrix
 #from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV
+from sklearn.neighbors import KNeighborsClassifier
 
 df = pd.read_csv('datasets/train.csv')
 
@@ -73,6 +75,17 @@ svm_lin = SVC(kernel='sigmoid',degree=3,C=10, gamma='auto')
 svm_rbf = SVC(kernel='rbf',C=10, gamma='auto')
 svm_rbf.fit(X_train_std_df, y_train)
 svm_lin.fit(X_train_std_df, y_train)
+
+knn = KNeighborsClassifier()
+
+best_k = int(round(math.sqrt(len(X)),0))
+print("K selected:" , best_k)
+knn = KNeighborsClassifier(n_neighbors=best_k)
+
+knn.fit(X_train_std_df, y_train)
+#score= knn_gscv.score(X_test_std_df, y_test)
+score= knn.score(X_test_std_df, y_test)
+print("Score de KNN:", score)
 
 #Applying grid search for optimal parameters and model after k-fold validation
 
