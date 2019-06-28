@@ -1,16 +1,19 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jun 27 22:18:50 2019
+
+@author: Adrian
+"""
+
 import pandas as pd
-import numpy as np
 
-df = pd.read_csv('train.csv',nrows=40000)
-#df.dropna(thresh=3)
-df.to_csv("train_clean.csv")
-print(df.describe)
-
-df = pd.read_csv('test.csv',nrows=10000)
-#df.dropna(thresh=3)
-df.to_csv("test_clean.csv")
-print(df.describe)
-
-
-
+for x in range(1,18):
+    print("***************ANALIZING CHUNK:" + str(x) + "****************")
+    df=pd.read_csv("C:\\Temp\\test\\train_clean_" + str(x) + ".csv")
+    size=len(df)
+    print("len(df):" , size)
+    print(df.isna().sum().sort_values(ascending=False))
+    print("************************************************************")
+    
+    
 
