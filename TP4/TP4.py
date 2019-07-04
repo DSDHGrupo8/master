@@ -151,7 +151,7 @@ class Imputer(BaseEstimator, TransformerMixin):
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
-df=pd.read_csv("C:\\temp\\train_clean.csv",encoding="utf-8",nrows=2000)
+df=pd.read_csv("train_clean.csv",encoding="utf-8",nrows=10000)
 #df=pd.read_csv("C:\\temp\\train_clean.csv",encoding="utf-8")
 
 Y=df["HasDetections"]
