@@ -4,6 +4,7 @@ Created on Sat Jun 29 12:24:45 2019
 
 @author: Adrian
 """
+import datetime
 import numpy as np
 import pandas as pd
 from sklearn.svm import SVC
@@ -151,12 +152,18 @@ class Imputer(BaseEstimator, TransformerMixin):
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
+startTime=datetime.datetime.now()
+
 df=pd.read_csv("train_clean.csv",encoding="utf-8",nrows=10000)
 #df=pd.read_csv("C:\\temp\\train_clean.csv",encoding="utf-8")
+
+print("Archivo de datos leido OK")
 
 Y=df["HasDetections"]
 X=df.drop("HasDetections",axis=1)
 del df
+
+print("X e Y listos")
 
 #print("X.info=", X.info())
 #print(X.describe())
@@ -167,7 +174,11 @@ X_train, X_test, y_train, y_test = train_test_split(X,Y,test_size=0.2, random_st
 del X
 del Y
 
+print("Split train-test listo")
+
 steps = [("colPreProcessor",colPreProcessor("")),("imputer",Imputer("")),("scaler", myScaler("")), ("SVC",SVC())]
+
+print("Preparando pipeline..")
 
 pipeline = Pipeline(steps) # define the pipeline object.
 parametros = {'SVM__C':[0.001,0.1,10,100,10e5], 'SVM__gamma':[0.1,0.01]}
@@ -176,7 +187,33 @@ grid = GridSearchCV(pipeline, param_grid=parametros, cv=5)
 print("X_train shape:", X_train.shape)
 print("X_test shape:", X_test.shape)
 
+print("Pipeline listo para fittear")
+
+pipe_fitstart=datetime.datetime.now()
 pipeline.fit(X_train, y_train)
+pipe_fitend=datetime.datetime.now()
+
+print("Pipeline fitteado")
+
+pipe_predictstart=datetime.datetime.now()
+
 preds = pipeline.predict(X_train)
+pipe_predictend=datetime.datetime.now()
+print("Predicciones listas recién salidas del pipeline")
+
+pipe_scoringstart=datetime.datetime.now()
 
 print("score:" ,pipeline.score(X_train,y_train))
+
+pipe_scoringend=datetime.datetime.now()
+
+endTime=datetime.datetime.now()
+print("Proceso terminado en:" + str((endTime-startTime).total_seconds()) + " segundos")
+print("Pipeline fit:" + str((pipe_fitend-pipe_fitstart).total_seconds()) + " segundos")
+print("Pipeline predict:" + str((pipe_predictend-pipe_predictstart).total_seconds()) + " segundos")
+print("Pipeline scoring:" + str((pipe_scoringend-pipe_scoringstart).total_seconds()) + " segundos")
+
+
+
+
+
