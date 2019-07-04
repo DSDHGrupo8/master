@@ -154,7 +154,7 @@ pd.set_option('display.width', 1000)
 
 startTime=datetime.datetime.now()
 
-df=pd.read_csv("train_clean.csv",encoding="utf-8",nrows=10000)
+df=pd.read_csv("train_clean.csv",encoding="utf-8",nrows=15000)
 #df=pd.read_csv("C:\\temp\\train_clean.csv",encoding="utf-8")
 
 print("Archivo de datos leido OK")
