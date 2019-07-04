@@ -147,14 +147,22 @@ class Imputer(BaseEstimator, TransformerMixin):
 
         X.loc[X.SMode.isnull(),"SMode"]=0
         return X
+    
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
 
-df=pd.read_csv("train_clean.csv",encoding="utf-8")
+df=pd.read_csv("C:\\temp\\train_clean.csv",encoding="utf-8",nrows=2000)
 
 Y=df["HasDetections"]
 X=df.drop("HasDetections",axis=1)
 del df
 
-X_train, X_test, y_train, y_test = train_test_split(X,Y,test_size=0.2, random_state=30, stratify=Y)
+#print("X.info=", X.info())
+#print(X.describe())
+#print(X.isna().sum().sort_values(ascending=False))
+
+
+X_train, X_test, y_train, y_test = train_test_split(X,Y,test_size=0.2, random_state=30)
 del X
 del Y
 
@@ -164,7 +172,10 @@ pipeline = Pipeline(steps) # define the pipeline object.
 parametros = {'SVM__C':[0.001,0.1,10,100,10e5], 'SVM__gamma':[0.1,0.01]}
 grid = GridSearchCV(pipeline, param_grid=parametros, cv=5)
 
-pipeline.fit(X_train, y_train)
-preds = pipeline.predict(X_test)
+print("X_train shape:", X_train.shape)
+print("X_test shape:", X_test.shape)
 
-np.mean(preds == y_test)
+pipeline.fit(X_train, y_train)
+preds = pipeline.predict(X_train)
+
+print("score:" ,pipeline.score(X_train,y_train))
