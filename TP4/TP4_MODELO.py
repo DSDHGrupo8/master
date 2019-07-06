@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split,GridSearchCV
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier,ExtraTreesClassifier
+from sklearn.metrics import accuracy_score, mean_absolute_error, classification_report
 from sklearn.neural_network import MLPClassifier
 #import xgboost as xgb
 import warnings
@@ -45,14 +46,9 @@ class Imputer(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         #X.dropna(thresh=10,inplace=True)
-        #X.loc[X.SmartScreen.isnull(),"SmartScreen"]="Off"
-        #X.loc[X.IsProtected.isnull(),"IsProtected"]=0
-        #X.loc[X.Firewall.isnull(),"Firewall"]=0
-        #X.loc[X.SMode.isnull(),"SMode"]=0
-        #Dropear rows donde UacLuenable no sea 0 o 1
-        #X=X[X.UacLuaenable<=1]
+        X.loc[X.IsProtected.isnull(),"IsProtected"]=0
         #Dropear rows donde HasDetections no sea 0 o 1
-        #X=X[X.HasDetections<=1]
+        
         return X
 
 warnings.filterwarnings("ignore")    
@@ -134,6 +130,8 @@ pipe_scoringstart=datetime.datetime.now()
 #y_pred=pipeline.predict(X_test)
 y_pred=grid.predict(X_test)
 print("Accuracy:" ,round(accuracy_score(y_test,y_pred),2))
+
+print("Classification report  \n %s" %(classification_report(y_test, y_pred)))
 
 pipe_scoringend=datetime.datetime.now()
 
