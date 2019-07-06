@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Jun 29 12:24:45 2019
-
 @author: Adrian
 """
 import datetime
 import numpy as np
 import pandas as pd
-from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import Normalizer
 from sklearn.model_selection import train_test_split,GridSearchCV
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
 
 class colPreProcessor(BaseEstimator, TransformerMixin):
     def __init__(self, key):
@@ -138,8 +137,9 @@ class Imputer(BaseEstimator, TransformerMixin):
     def transform(self, X):
         X.dropna(thresh=10,inplace=True)
         #X.loc[X.SmartScreen.isnull(),"SmartScreen"]="Off"
-        X.loc[X.Firewall.isnull(),"IsProtected"]=0
+        X.loc[X.IsProtected.isnull(),"IsProtected"]=0
         X.loc[X.Firewall.isnull(),"Firewall"]=0
+        X.loc[X.SMode.isnull(),"SMode"]=0
         #Dropear rows donde UacLuenable no sea 0 o 1
         X=X[X.UacLuaenable<=1]
         #Dropear rows donde HasDetections no sea 0 o 1
@@ -154,8 +154,8 @@ pd.set_option('display.width', 1000)
 
 startTime=datetime.datetime.now()
 
-df=pd.read_csv("train_clean.csv",encoding="utf-8",nrows=15000)
-#df=pd.read_csv("C:\\temp\\train_clean.csv",encoding="utf-8")
+#df=pd.read_csv("train_clean.csv",encoding="utf-8",nrows=15000)
+df=pd.read_csv("train_clean.csv",encoding="utf-8")
 
 print("Archivo de datos leido OK")
 
@@ -176,16 +176,21 @@ del Y
 
 print("Split train-test listo")
 
-steps = [("colPreProcessor",colPreProcessor("")),("imputer",Imputer("")),("scaler", myScaler("")), ("SVC",SVC())]
+steps = [("colPreProcessor",colPreProcessor("")),("imputer",Imputer("")),("scaler", myScaler("")), ("DT",DecisionTreeClassifier(max_depth = 2))]
 
 print("Preparando pipeline..")
 
 pipeline = Pipeline(steps) # define the pipeline object.
-parametros = {'SVM__C':[0.001,0.1,10,100,10e5], 'SVM__gamma':[0.1,0.01]}
+parametros = {'DT':[2]}
+
 grid = GridSearchCV(pipeline, param_grid=parametros, cv=5)
+#grid = GridSearchCV(pipeline, cv=5)
 
 print("X_train shape:", X_train.shape)
+print("y_train shape:", y_train.shape)
 print("X_test shape:", X_test.shape)
+
+
 
 print("Pipeline listo para fittear")
 
@@ -195,11 +200,10 @@ pipe_fitend=datetime.datetime.now()
 
 print("Pipeline fitteado")
 
-pipe_predictstart=datetime.datetime.now()
-
-preds = pipeline.predict(X_train)
-pipe_predictend=datetime.datetime.now()
-print("Predicciones listas recién salidas del pipeline")
+#pipe_predictstart=datetime.datetime.now()
+#preds = pipeline.predict(X_train)
+#pipe_predictend=datetime.datetime.now()
+#print("Predicciones listas recién salidas del pipeline")
 
 pipe_scoringstart=datetime.datetime.now()
 
@@ -210,10 +214,5 @@ pipe_scoringend=datetime.datetime.now()
 endTime=datetime.datetime.now()
 print("Proceso terminado en:" + str((endTime-startTime).total_seconds()) + " segundos")
 print("Pipeline fit:" + str((pipe_fitend-pipe_fitstart).total_seconds()) + " segundos")
-print("Pipeline predict:" + str((pipe_predictend-pipe_predictstart).total_seconds()) + " segundos")
+#print("Pipeline predict:" + str((pipe_predictend-pipe_predictstart).total_seconds()) + " segundos")
 print("Pipeline scoring:" + str((pipe_scoringend-pipe_scoringstart).total_seconds()) + " segundos")
-
-
-
-
-
