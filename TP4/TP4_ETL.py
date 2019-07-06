@@ -1,4 +1,6 @@
 import pandas as pd
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
 
  
 
@@ -16,6 +18,7 @@ fields=["ProductName","EngineVersion","AvSigVersion",
     "AVProductStatesIdentifier","AVProductsInstalled","AVProductsEnabled","HasTpm","CountryIdentifier",
     "CityIdentifier","Platform","Processor","OsVer","OsPlatformSubRelease","IsProtected","SMode",
     "SmartScreen","Firewall","Census_DeviceFamily","RtpStateBitfield","IsSxsPassiveMode",
+    "Census_HasOpticalDiskDrive","Census_PrimaryDiskTypeName","DefaultBrowsersIdentifier",
     "Census_ProcessorCoreCount","Census_PrimaryDiskTotalCapacity","Census_TotalPhysicalRAM",
     "Census_OSArchitecture", "Census_OSWUAutoUpdateOptionsName","Census_IsPortableOperatingSystem",
     "Census_GenuineStateName","Census_IsSecureBootEnabled","UacLuaenable","HasDetections"]
@@ -107,7 +110,17 @@ dtypes = {
         'HasDetections':                                        'int8'
         }	
 	
-df = pd.read_csv('C:\\TEMP\\TP4\\train.csv',usecols=fields,nrows=500000,dtype=dtypes)
+df=pd.read_csv("C:\\TEMP\\TP4\\train.csv",nrows=250000,encoding="utf-8")
+
+df2=df.sample(frac=0.04)
+
+df2.to_csv("train_clean.csv",encoding="utf-8")
+del df
+del df2
+
+df=pd.read_csv("train_clean.csv",encoding="utf-8")
+
+
 print("df.info()=" ,df.info())
 
 #print("df.describe()=" ,df.describe())
@@ -148,7 +161,7 @@ df.drop("ProductName",axis=1,inplace=True)
 #Dummificar OsVer
 dummies_OsVer=pd.get_dummies(df['OsVer'],prefix='dummy_OsVer',drop_first=True)
 df=pd.concat([df,dummies_OsVer],axis=1)
-
+#df["OsVer"]=df["OsVer"].astype(str).replace(".","")
 df.drop("OsVer",axis=1,inplace=True)
 
 #Dummificar EngineVersion
@@ -157,11 +170,14 @@ df=pd.concat([df,dummies_EngineVersion],axis=1)
 
 df.drop("EngineVersion",axis=1,inplace=True)
 
-##Dummificar AvSigVersion
-#dummies_AvSigVersion=pd.get_dummies(df['AvSigVersion'],prefix='dummy_AvSigVersion',drop_first=True)
-#df=pd.concat([df,dummies_AvSigVersion],axis=1)
+#df["EngineVersion"]=df["EngineVersion"].astype(str).replace(".","")
 
-df["AvSigVersion"]=df["AvSigVersion"].astype(str).replace(".","")
+##Dummificar AvSigVersion
+dummies_AvSigVersion=pd.get_dummies(df['AvSigVersion'],prefix='dummy_AvSigVersion',drop_first=True)
+df=pd.concat([df,dummies_AvSigVersion],axis=1)
+
+#df["AvSigVersion"]=df["AvSigVersion"].astype(str).replace(".","")
+
 df.drop("AvSigVersion",axis=1,inplace=True)
 
 #Dummificar Platform
@@ -212,6 +228,42 @@ df=pd.concat([df,dummies_Census_GenuineStateName],axis=1)
 
 df.drop("Census_GenuineStateName",axis=1,inplace=True)
 
+#Dummificar Census_HasOpticalDiskDrive
+dummies_Census_HasOpticalDiskDrive=pd.get_dummies(df['Census_HasOpticalDiskDrive'],prefix='dummy_Census_HasOpticalDiskDrive',drop_first=True)
+df=pd.concat([df,dummies_Census_HasOpticalDiskDrive],axis=1)
 
+df.drop("Census_HasOpticalDiskDrive",axis=1,inplace=True)
 
-df.to_csv("train_clean.csv")
+#Census_PrimaryDiskTypeName
+
+#Dummificar Census_PrimaryDiskTypeName
+dummies_Census_PrimaryDiskTypeName=pd.get_dummies(df['Census_PrimaryDiskTypeName'],prefix='dummy_Census_PrimaryDiskTypeName',drop_first=True)
+df=pd.concat([df,dummies_Census_PrimaryDiskTypeName],axis=1)
+
+df.drop("Census_PrimaryDiskTypeName",axis=1,inplace=True)
+
+#Dummificar DefaultBrowsersIdentifier
+dummies_DefaultBrowsersIdentifier=pd.get_dummies(df['DefaultBrowsersIdentifier'],prefix='dummy_DefaultBrowsersIdentifier',drop_first=True)
+df=pd.concat([df,dummies_DefaultBrowsersIdentifier],axis=1)
+
+df.drop("DefaultBrowsersIdentifier",axis=1,inplace=True)
+
+#bestfeatures = SelectKBest(score_func=chi2, k=40)
+#
+#y=df["HasDetections"]
+#X=df.drop("HasDetections",axis=1)
+#
+#fit = bestfeatures.fit(X,y)
+#dfscores = pd.DataFrame(fit.scores_)
+#dfcolumns = pd.DataFrame(X.columns)
+#featureScores = pd.concat([dfcolumns,dfscores],axis=1)
+#featureScores.columns = ['Specs','Score']  #naming the dataframe columns
+#print(featureScores.sort_values(ascending=True,by="Score"))  #print all features
+#df1=featureScores[featureScores["Score"] < 0.25]
+#df2=featureScores[featureScores["Score"].isnull()]
+#print("df1:",df1)
+#print("df2:",df2)
+##print("featureScores:" , featureScores)
+#df.drop(columns=df1["Specs"],inplace=True)
+#df.drop(columns=df2["Specs"],inplace=True)
+df.to_csv("train_clean2.csv",encoding="utf-8")

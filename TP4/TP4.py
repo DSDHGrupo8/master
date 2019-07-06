@@ -4,15 +4,18 @@ Created on Sat Jun 29 12:24:45 2019
 @author: Adrian
 """
 import datetime
-import numpy as np
+#import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+#from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import Normalizer
 from sklearn.model_selection import train_test_split,GridSearchCV
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier,ExtraTreesClassifier
 from sklearn.neural_network import MLPClassifier
+#import xgboost as xgb
+import warnings
+
 
 from sklearn.metrics import accuracy_score,recall_score,confusion_matrix
 
@@ -25,7 +28,7 @@ class myScaler(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        scaler = StandardScaler().fit(X)
+        scaler = Normalizer().fit(X)
         scaler.transform(X)
         return X
 
@@ -43,22 +46,23 @@ class Imputer(BaseEstimator, TransformerMixin):
     def transform(self, X):
         #X.dropna(thresh=10,inplace=True)
         #X.loc[X.SmartScreen.isnull(),"SmartScreen"]="Off"
-        X.loc[X.IsProtected.isnull(),"IsProtected"]=0
-        X.loc[X.Firewall.isnull(),"Firewall"]=0
-        X.loc[X.SMode.isnull(),"SMode"]=0
+        #X.loc[X.IsProtected.isnull(),"IsProtected"]=0
+        #X.loc[X.Firewall.isnull(),"Firewall"]=0
+        #X.loc[X.SMode.isnull(),"SMode"]=0
         #Dropear rows donde UacLuenable no sea 0 o 1
         #X=X[X.UacLuaenable<=1]
         #Dropear rows donde HasDetections no sea 0 o 1
         #X=X[X.HasDetections<=1]
         return X
-    
+
+warnings.filterwarnings("ignore")    
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 startTime=datetime.datetime.now()
 
 
-df=pd.read_csv("train_clean.csv",nrows=2000,encoding="utf-8")
+df=pd.read_csv("train_clean2.csv",encoding="utf-8")
 
 print("Archivo de datos leido OK")
 print("Cant. de registros:", len(df))
@@ -80,8 +84,11 @@ del Y
 
 print("Split train-test listo")
 
-steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("DT",RandomForestClassifier(n_estimators=150,max_depth=25,max_features="log2"))]
-#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("DT",MLPClassifier(hidden_layer_sizes=(50,30,20),max_iter=500))]
+#xgb_model=xgb.XGBClassifier(objective="binary:logistic", random_state=42)
+
+steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",RandomForestClassifier(n_estimators=150,max_depth=50,max_features="log2"))]
+#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",xgb_model)]
+#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",MLPClassifier(hidden_layer_sizes=(100,100,100),max_iter=1000))]
 
 print("Preparando pipeline..")
 
@@ -112,8 +119,8 @@ pipe_fitend=datetime.datetime.now()
 print("Pipeline fitteado")
 
 
-print("Mejor estimador:", grid.best_score_)
-print("Importancia de features:", grid.best_estimator_.feature_importances_)
+print("Mejor estimador:", round(grid.best_score_,2))
+#print("Importancia de features:", grid.best_estimator_.feature_importances_)
 
 #pipe_predictstart=datetime.datetime.now()
 #preds = pipeline.predict(X_train)
