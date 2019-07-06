@@ -16,7 +16,7 @@ print("pandas:" , pd.__version__)
 
 fields=["ProductName","EngineVersion","AvSigVersion",
     "AVProductStatesIdentifier","AVProductsInstalled","AVProductsEnabled","HasTpm","CountryIdentifier",
-    "CityIdentifier","Platform","Processor","OsVer","OsPlatformSubRelease","IsProtected","SMode",
+    "CityIdentifier","Platform","Processor","OsVer","OsBuild","OsPlatformSubRelease","IsProtected","SMode",
     "SmartScreen","Firewall","Census_DeviceFamily","RtpStateBitfield","IsSxsPassiveMode",
     "Census_HasOpticalDiskDrive","Census_PrimaryDiskTypeName","DefaultBrowsersIdentifier",
     "Census_ProcessorCoreCount","Census_PrimaryDiskTotalCapacity","Census_TotalPhysicalRAM",
@@ -112,7 +112,7 @@ dtypes = {
 	
 df=pd.read_csv("C:\\TEMP\\TP4\\train.csv",usecols=fields,nrows=250000,encoding="utf-8")
 
-df2=df.sample(frac=0.04)
+df2=df.sample(frac=0.1)
 
 df2.to_csv("train_clean.csv",encoding="utf-8")
 del df
@@ -131,7 +131,7 @@ minidf=df[df.SmartScreen.str.contains("&#df0")]
 print("len(minidf):", len(minidf))
 indexNames= df[df['SmartScreen'].str.contains("&#df0")].index
 
-# Delete these row indedfes from dataFrame
+# Delete these row indexes from dataFrame
 df.drop(indexNames , inplace=True)
 
 df.query("Census_IsSecureBootEnabled in [0,1]",inplace=True)
@@ -163,6 +163,12 @@ dummies_OsVer=pd.get_dummies(df['OsVer'],prefix='dummy_OsVer',drop_first=True)
 df=pd.concat([df,dummies_OsVer],axis=1)
 #df["OsVer"]=df["OsVer"].astype(str).replace(".","")
 df.drop("OsVer",axis=1,inplace=True)
+
+#Dummificar OsBuild
+dummies_OsBuild=pd.get_dummies(df['OsBuild'],prefix='dummy_OsBuild',drop_first=True)
+df=pd.concat([df,dummies_OsBuild],axis=1)
+#df["OsVer"]=df["OsVer"].astype(str).replace(".","")
+df.drop("OsBuild",axis=1,inplace=True)
 
 #Dummificar EngineVersion
 dummies_EngineVersion=pd.get_dummies(df['EngineVersion'],prefix='dummy_EngineVersion',drop_first=True)
@@ -259,7 +265,7 @@ dfcolumns = pd.DataFrame(X.columns)
 featureScores = pd.concat([dfcolumns,dfscores],axis=1)
 featureScores.columns = ['Specs','Score']  #naming the dataframe columns
 print(featureScores.sort_values(ascending=True,by="Score"))  #print all features
-df1=featureScores[featureScores["Score"] < 0.25]
+df1=featureScores[featureScores["Score"] < 0.05]
 df2=featureScores[featureScores["Score"].isnull()]
 print("df1:",df1)
 print("df2:",df2)
