@@ -110,7 +110,7 @@ dtypes = {
         'HasDetections':                                        'int8'
         }	
 	
-df=pd.read_csv("C:\\TEMP\\TP4\\train.csv",nrows=250000,encoding="utf-8")
+df=pd.read_csv("C:\\TEMP\\TP4\\train.csv",usecols=fields,nrows=250000,encoding="utf-8")
 
 df2=df.sample(frac=0.04)
 
@@ -118,7 +118,7 @@ df2.to_csv("train_clean.csv",encoding="utf-8")
 del df
 del df2
 
-df=pd.read_csv("train_clean.csv",encoding="utf-8")
+df=pd.read_csv("train_clean.csv",usecols=fields,encoding="utf-8")
 
 
 print("df.info()=" ,df.info())
@@ -248,22 +248,22 @@ df=pd.concat([df,dummies_DefaultBrowsersIdentifier],axis=1)
 
 df.drop("DefaultBrowsersIdentifier",axis=1,inplace=True)
 
-#bestfeatures = SelectKBest(score_func=chi2, k=40)
-#
-#y=df["HasDetections"]
-#X=df.drop("HasDetections",axis=1)
-#
-#fit = bestfeatures.fit(X,y)
-#dfscores = pd.DataFrame(fit.scores_)
-#dfcolumns = pd.DataFrame(X.columns)
-#featureScores = pd.concat([dfcolumns,dfscores],axis=1)
-#featureScores.columns = ['Specs','Score']  #naming the dataframe columns
-#print(featureScores.sort_values(ascending=True,by="Score"))  #print all features
-#df1=featureScores[featureScores["Score"] < 0.25]
-#df2=featureScores[featureScores["Score"].isnull()]
-#print("df1:",df1)
-#print("df2:",df2)
-##print("featureScores:" , featureScores)
-#df.drop(columns=df1["Specs"],inplace=True)
-#df.drop(columns=df2["Specs"],inplace=True)
+bestfeatures = SelectKBest(score_func=chi2, k=40)
+
+y=df["HasDetections"]
+X=df.drop("HasDetections",axis=1)
+
+fit = bestfeatures.fit(X,y)
+dfscores = pd.DataFrame(fit.scores_)
+dfcolumns = pd.DataFrame(X.columns)
+featureScores = pd.concat([dfcolumns,dfscores],axis=1)
+featureScores.columns = ['Specs','Score']  #naming the dataframe columns
+print(featureScores.sort_values(ascending=True,by="Score"))  #print all features
+df1=featureScores[featureScores["Score"] < 0.25]
+df2=featureScores[featureScores["Score"].isnull()]
+print("df1:",df1)
+print("df2:",df2)
+#print("featureScores:" , featureScores)
+df.drop(columns=df1["Specs"],inplace=True)
+df.drop(columns=df2["Specs"],inplace=True)
 df.to_csv("train_clean2.csv",encoding="utf-8")
