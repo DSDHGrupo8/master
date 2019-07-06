@@ -98,7 +98,7 @@ dtypes = {
         'HasDetections':                                        'int8'
         }	
 	
-df = pd.read_csv('c:\\TEMP\\TP4\\train.csv',usecols=fields,nrows=50000,dtype=dtypes)
+df = pd.read_csv('train.csv',usecols=fields,nrows=220000,dtype=dtypes)
 print("df.info()=" ,df.info())
 
 #print("df.describe()=" ,df.describe())
@@ -117,5 +117,12 @@ df.query("Census_OSArchitecture in ['amd64','arm64','x86','x64']",inplace=True)
 
 print("len(df) after", len(df))
 
-df=df.fillna(0)
+#df=df.fillna(0)
+
+df.dropna(subset=["SMode","CityIdentifier","AVProductStatesIdentifier","AVProductsInstalled","AVProductsEnabled","RtpStateBitfield","UacLuaenable"],inplace=True)
+
+df.loc[df.IsProtected.isnull(),"IsProtected"]=0
+df.loc[df.Firewall.isnull(),"Firewall"]=0
+df.loc[df.SMode.isnull(),"SMode"]=0
+
 df.to_csv("train_clean.csv")
