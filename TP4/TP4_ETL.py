@@ -16,6 +16,7 @@ fields=["ProductName","EngineVersion","AvSigVersion",
     "AVProductStatesIdentifier","AVProductsInstalled","AVProductsEnabled","HasTpm","CountryIdentifier",
     "CityIdentifier","Platform","Processor","OsVer","OsPlatformSubRelease","IsProtected","SMode",
     "SmartScreen","Firewall","Census_DeviceFamily","RtpStateBitfield","IsSxsPassiveMode",
+    "Census_ProcessorCoreCount","Census_PrimaryDiskTotalCapacity","Census_TotalPhysicalRAM",
     "Census_OSArchitecture", "Census_OSWUAutoUpdateOptionsName","Census_IsPortableOperatingSystem",
     "Census_GenuineStateName","Census_IsSecureBootEnabled","UacLuaenable","HasDetections"]
 
@@ -127,7 +128,7 @@ print("len(df) after", len(df))
 
 #df=df.fillna(0)
 
-df.dropna(subset=["CityIdentifier"],inplace=True)
+df.dropna(subset=["CityIdentifier","Census_TotalPhysicalRAM","Census_PrimaryDiskTotalCapacity","Census_ProcessorCoreCount"],inplace=True)
 
 df.loc[df.AVProductStatesIdentifier.isnull(),"AVProductStatesIdentifier"]=0
 df.loc[df.AVProductsInstalled.isnull(),"AVProductsInstalled"]=0
@@ -210,5 +211,7 @@ dummies_Census_GenuineStateName=pd.get_dummies(df['Census_GenuineStateName'],pre
 df=pd.concat([df,dummies_Census_GenuineStateName],axis=1)
 
 df.drop("Census_GenuineStateName",axis=1,inplace=True)
+
+
 
 df.to_csv("train_clean.csv")

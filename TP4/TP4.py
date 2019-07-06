@@ -58,7 +58,7 @@ pd.set_option('display.width', 1000)
 startTime=datetime.datetime.now()
 
 
-df=pd.read_csv("train_clean.csv",nrows=10000,encoding="utf-8")
+df=pd.read_csv("train_clean.csv",nrows=2000,encoding="utf-8")
 
 print("Archivo de datos leido OK")
 print("Cant. de registros:", len(df))
@@ -74,7 +74,7 @@ print("X e Y listos")
 #print(X.isna().sum().sort_values(ascending=False))
 
 
-X_train, X_test, y_train, y_test = train_test_split(X,Y,test_size=0.05, random_state=30)
+X_train, X_test, y_train, y_test = train_test_split(X,Y,test_size=0.2, random_state=30)
 del X
 del Y
 
@@ -87,15 +87,16 @@ print("Preparando pipeline..")
 
 pipeline = Pipeline(steps) # define the pipeline object.
 
-param_dist = {'max_depth': [2, 3, 4],
-              'bootstrap': [True, False],
-              'max_features': ['auto', 'sqrt', 'log2', None],
-              'criterion': ['gini', 'entropy']}
-    
-#params=[]
+#param_dist = {'max_depth': [2, 3, 4],
+#              'bootstrap': [True, False],
+#              'max_features': ['auto', 'sqrt', 'log2', None],
+#              'criterion': ['gini', 'entropy']}
+ 
+   
+param_dist={}
 
-grid = GridSearchCV(pipeline, param_grid=param_dist, cv=5)
-#grid = GridSearchCV(pipeline, cv=5)
+grid = GridSearchCV(pipeline, param_grid=param_dist, cv=5,scoring="f1")
+
 
 print("X_train shape:", X_train.shape)
 print("y_train shape:", y_train.shape)
@@ -104,10 +105,15 @@ print("X_test shape:", X_test.shape)
 print("Pipeline listo para fittear")
 
 pipe_fitstart=datetime.datetime.now()
-pipeline.fit(X_train, y_train)
+#pipeline.fit(X_train, y_train)
+grid.fit(X_train,y_train)
 pipe_fitend=datetime.datetime.now()
 
 print("Pipeline fitteado")
+
+
+print("Mejor estimador:", grid.best_score_)
+print("Importancia de features:", grid.best_estimator_.feature_importances_)
 
 #pipe_predictstart=datetime.datetime.now()
 #preds = pipeline.predict(X_train)
@@ -119,7 +125,8 @@ pipe_scoringstart=datetime.datetime.now()
 #print("score RandomForest on test:" ,round(pipeline.score(X_train,y_train),2))
 #print("score RandomForest on test:" ,round(pipeline.score(X_test,y_test),2))
 
-y_pred=pipeline.predict(X_test)
+#y_pred=pipeline.predict(X_test)
+y_pred=grid.predict(X_test)
 print("Accuracy:" ,round(accuracy_score(y_test,y_pred),2))
 
 pipe_scoringend=datetime.datetime.now()
