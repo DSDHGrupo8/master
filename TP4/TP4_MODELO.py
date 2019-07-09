@@ -16,6 +16,7 @@ from sklearn.metrics import accuracy_score, mean_absolute_error, classification_
 from sklearn.neural_network import MLPClassifier
 #import xgboost as xgb
 import warnings
+import gc
 
 
 from sklearn.metrics import accuracy_score,recall_score,confusion_matrix
@@ -46,7 +47,15 @@ class Imputer(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         #X.dropna(thresh=10,inplace=True)
-        X.loc[X.IsProtected.isnull(),"IsProtected"]=0
+        X.loc[X.AVProductStatesIdentifier.isnull(),"AVProductStatesIdentifier"]=0
+        X.loc[X.AVProductsInstalled.isnull(),"AVProductsInstalled"]=0
+        X.loc[X.AVProductsEnabled.isnull(),"AVProductsEnabled"]=0
+        X.loc[X.RtpStateBitfield.isnull(),"RtpStateBitfield"]=0
+        #X.loc[X.UacLuaenable.isnull(),"UacLuaenable"]=0
+        #X.loc[X.IsProtected.isnull(),"IsProtected"]=0
+        #X.loc[X.Firewall.isnull(),"Firewall"]=0
+        #X.loc[X.SMode.isnull(),"SMode"]=0
+        #X.loc[X.IsProtected.isnull(),"IsProtected"]=0
         #Dropear rows donde HasDetections no sea 0 o 1
         
         return X
@@ -57,7 +66,12 @@ pd.set_option('display.width', 1000)
 
 startTime=datetime.datetime.now()
 
-df=pd.read_csv("train_clean2.csv",encoding="utf-8")
+#df=pd.read_csv("train_etl_final.csv",encoding="utf-8")
+input_read_start=datetime.datetime.now()
+df=pd.read_hdf("train_etl_final.h5")
+input_read_end=datetime.datetime.now()
+
+print("input HDF5 read time (secs):", str((input_read_end-input_read_start).total_seconds()))
 
 print("Archivo de datos leido OK")
 print("Cant. de registros:", len(df))
@@ -140,3 +154,7 @@ print("Proceso terminado en:" + str((endTime-startTime).total_seconds()) + " seg
 print("Pipeline fit:" + str((pipe_fitend-pipe_fitstart).total_seconds()) + " segundos")
 #print("Pipeline predict:" + str((pipe_predictend-pipe_predictstart).total_seconds()) + " segundos")
 print("Pipeline scoring:" + str((pipe_scoringend-pipe_scoringstart).total_seconds()) + " segundos")
+
+del X_train, X_test, y_train, y_test
+gc.collect()
+print("READY!")
