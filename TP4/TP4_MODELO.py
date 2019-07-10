@@ -6,7 +6,7 @@ Created on Sat Jun 29 12:24:45 2019
 import datetime
 #import numpy as np
 import pandas as pd
-#from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import Normalizer
 from sklearn.model_selection import train_test_split,GridSearchCV
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -14,7 +14,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier,ExtraTreesClassifier
 from sklearn.metrics import accuracy_score, mean_absolute_error, classification_report
 from sklearn.neural_network import MLPClassifier
-#import xgboost as xgb
+from sklearn.metrics import roc_auc_score
+
+import xgboost as xgb
 import warnings
 import gc
 
@@ -30,7 +32,7 @@ class myScaler(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        scaler = Normalizer().fit(X)
+        scaler = StandardScaler().fit(X)
         scaler.transform(X)
         return X
 
@@ -68,7 +70,7 @@ startTime=datetime.datetime.now()
 
 #df=pd.read_csv("train_etl_final.csv",encoding="utf-8")
 input_read_start=datetime.datetime.now()
-df=pd.read_hdf("train_etl_final.h5")
+df=pd.read_hdf("train_etl_final.h5",start=0,stop=20000)
 input_read_end=datetime.datetime.now()
 
 print("input HDF5 read time (secs):", str((input_read_end-input_read_start).total_seconds()))
@@ -93,11 +95,12 @@ del Y
 
 print("Split train-test listo")
 
-#xgb_model=xgb.XGBClassifier(objective="binary:logistic", random_state=42)
+xgb_model=xgb.XGBClassifier(objective="binary:logistic", random_state=42)
 
-steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",RandomForestClassifier(n_estimators=150,max_depth=50,max_features="log2"))]
-#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",xgb_model)]
-#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",MLPClassifier(hidden_layer_sizes=(100,100,100),max_iter=1000))]
+#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",RandomForestClassifier(n_estimators=150,max_depth=50,max_features="log2"))]
+steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",xgb_model)]
+#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",MLPClassifier(hidden_layer_sizes=(50,100,100,50,25,1),max_iter=10))]
+#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",MLPClassifier(hidden_layer_sizes=(100,50,50,1),max_iter=50))]
 
 print("Preparando pipeline..")
 
@@ -142,8 +145,11 @@ pipe_scoringstart=datetime.datetime.now()
 #print("score RandomForest on test:" ,round(pipeline.score(X_test,y_test),2))
 
 #y_pred=pipeline.predict(X_test)
-y_pred=grid.predict(X_test)
+y_pred=grid.best_estimator_.predict(X_test)
 print("Accuracy:" ,round(accuracy_score(y_test,y_pred),2))
+
+auc=roc_auc_score(y_test, y_pred)
+print("AUC: %.3f" % auc)
 
 print("Classification report  \n %s" %(classification_report(y_test, y_pred)))
 
