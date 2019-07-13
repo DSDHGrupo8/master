@@ -15,7 +15,8 @@ from sklearn.ensemble import RandomForestClassifier,ExtraTreesClassifier
 from sklearn.metrics import accuracy_score, mean_absolute_error, classification_report
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import roc_auc_score
-
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier
 import xgboost as xgb
 import warnings
 import gc
@@ -49,10 +50,10 @@ class Imputer(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         #X.dropna(thresh=10,inplace=True)
-        X.loc[X.AVProductStatesIdentifier.isnull(),"AVProductStatesIdentifier"]=0
-        X.loc[X.AVProductsInstalled.isnull(),"AVProductsInstalled"]=0
-        X.loc[X.AVProductsEnabled.isnull(),"AVProductsEnabled"]=0
-        X.loc[X.RtpStateBitfield.isnull(),"RtpStateBitfield"]=0
+#        X.loc[X.AVProductStatesIdentifier.isnull(),"AVProductStatesIdentifier"]=0
+#        X.loc[X.AVProductsInstalled.isnull(),"AVProductsInstalled"]=0
+#        X.loc[X.AVProductsEnabled.isnull(),"AVProductsEnabled"]=0
+#        X.loc[X.RtpStateBitfield.isnull(),"RtpStateBitfield"]=0
         #X.loc[X.UacLuaenable.isnull(),"UacLuaenable"]=0
         #X.loc[X.IsProtected.isnull(),"IsProtected"]=0
         #X.loc[X.Firewall.isnull(),"Firewall"]=0
@@ -68,12 +69,14 @@ pd.set_option('display.width', 1000)
 
 startTime=datetime.datetime.now()
 
-#df=pd.read_csv("train_etl_final.csv",encoding="utf-8")
+#fields=["AvSigVersion","AVProductsInstalled","IsProtected","Firewall","HasDetections"]
+#df=pd.read_csv("train_etl_etapa2.csv",usecols=fields,encoding="utf-8")
+df=pd.read_csv("train_etl_etapa2.csv",encoding="utf-8")
 input_read_start=datetime.datetime.now()
-df=pd.read_hdf("train_etl_final.h5",start=0,stop=20000)
+#df=pd.read_hdf("train_etl_final.h5",start=0,stop=20000)
 input_read_end=datetime.datetime.now()
 
-print("input HDF5 read time (secs):", str((input_read_end-input_read_start).total_seconds()))
+print("input read time (secs):", str((input_read_end-input_read_start).total_seconds()))
 
 print("Archivo de datos leido OK")
 print("Cant. de registros:", len(df))
@@ -95,12 +98,28 @@ del Y
 
 print("Split train-test listo")
 
-xgb_model=xgb.XGBClassifier(objective="binary:logistic", random_state=42)
+#xgb_model=xgb.XGBClassifier(objective="binary:logistic", random_state=42)
+xgb_model=xgb.XGBClassifier(silent=False, 
+                      scale_pos_weight=1,
+                      learning_rate=0.01,  
+                      colsample_bytree = 0.4,
+                      subsample = 0.8,
+                      objective='binary:logistic', 
+                      n_estimators=1000, 
+                      reg_alpha = 0.3,
+                      max_depth=4, 
+                      gamma=10)
+#modelo_NB = MultinomialNB()
 
-#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",RandomForestClassifier(n_estimators=150,max_depth=50,max_features="log2"))]
+#knn = KNeighborsClassifier()
+#knn = KNeighborsClassifier(n_neighbors=2)
+
+#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",RandomForestClassifier(n_estimators=100,max_depth=25,max_features="log2"))]
 steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",xgb_model)]
+#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",knn)]
+#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",modelo_NB)]
 #steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",MLPClassifier(hidden_layer_sizes=(50,100,100,50,25,1),max_iter=10))]
-#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",MLPClassifier(hidden_layer_sizes=(100,50,50,1),max_iter=50))]
+#steps = [("imputer",Imputer("")),("scaler", myScaler("")), ("CM",MLPClassifier(hidden_layer_sizes=(100,50,50,1),max_iter=100))]
 
 print("Preparando pipeline..")
 
@@ -114,7 +133,7 @@ pipeline = Pipeline(steps) # define the pipeline object.
    
 param_dist={}
 
-grid = GridSearchCV(pipeline, param_grid=param_dist, cv=5,scoring="f1")
+grid = GridSearchCV(pipeline, param_grid=param_dist, cv=5,scoring="accuracy")
 
 
 print("X_train shape:", X_train.shape)

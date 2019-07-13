@@ -200,7 +200,7 @@ dtypes = {
 gc.collect()
 
 csv_read_start=datetime.datetime.now()
-df1=pd.read_csv("C:\\TEMP\\TP4\\train.csv",usecols=fields,nrows=1000000,encoding="utf-8")
+df1=pd.read_csv("C:\\TEMP\\TP4\\train.csv",usecols=fields,nrows=5000,encoding="utf-8")
 csv_read_end=datetime.datetime.now()
 
 print("input CSV read time (secs):", str((csv_read_end-csv_read_start).total_seconds()))
