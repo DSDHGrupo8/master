@@ -1,0 +1,17 @@
+ETL:
+-----
+Recorte de columnas innecesarias
+Eliminación de Valores inválidos (columnas SmartScreen)
+Eliminación de outliers (IsSecureBootEnabled, OsArchitecture,TotalRAM,CoreCount,DiskCapacity)
+Imputación de valores (donde NULL ponemos 0=apagado, Columnas AV, RptState,UAC,IsProtected,Firecwall, SMode)
+Dummificación de variables (columnas Platform, ProductName, Processor, Smartscreen,etc)
+Conversión de columnas de versionado a valor numérico (ej. 1.0.0.4 a 1.004)
+
+Modelo:
+-------
+Se creó un Escalador
+Se creó un Imputador (luego se desactivó y fue pasado al ETL)
+Se crea un Pipeline que usa el escalador, el imputador y por último un XGBClassifier (el mejor score)
+(Antes de eso probé con MultinomialNB,RandomForestClassifier, y una red neuronal MLPClassifier)
+MultinomialNB daba cerca de 0.51, MLPClassifier 0.50, RF 0.61 y el XGBoost daba algo cerca de 0.62-0.63
+Al pipeline le apliqué GridSearchCV
