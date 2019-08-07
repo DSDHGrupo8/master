@@ -35,7 +35,7 @@ params = {'num_leaves': st.randint(64,512),
          "lambda_l2": st.randint(0, 1),
          "random_state": [42]}
 
-lgbm = RandomizedSearchCV(model_lgb, params, n_iter = 25, verbose=2, n_jobs=-1, cv=5)
+lgbm = RandomizedSearchCV(model_lgb, params, n_iter = 150, verbose=2, n_jobs=-1, cv=5, scoring='roc_auc')
 lgbm.fit(X_train, y_train)
 
 opt_lgbm = lgbm.best_estimator_
